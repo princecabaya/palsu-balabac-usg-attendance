@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 856" role="img" aria-label="Stylized PSU Balabac campus arch and layered waves">
+  <g fill="none" stroke="#d95d27" stroke-linecap="round" stroke-linejoin="round" opacity=".12">
+    <path d="M76 621C126 550 193 502 270 477c77 25 144 73 194 144" stroke-width="18"/>
+    <path d="M92 621c48-62 108-103 178-128 70 25 130 66 178 128" stroke-width="6"/>
+    <path d="M65 621h42m326 0h42" stroke-width="10"/>
+    <path d="M58 608h56M426 608h56" stroke-width="7"/>
+    <path d="M70 602v116m400-116v116" stroke-width="24"/>
+    <path d="M58 718h65m294 0h65M63 736h55m304 0h55" stroke-width="12"/>
+    <path d="M74 583v-20m392 20v-20" stroke-width="9"/>
+    <path d="M64 562h20m372 0h20" stroke-width="7"/>
+    <path d="M74 562l10-15-10-23-10 23 10 15Zm392 0 10-15-10-23-10 23 10 15Z" stroke-width="5"/>
+  </g>
+  <g fill="#d95d27" opacity=".07">
+    <path d="M148 662c10-38 20-74 39-97-6 31-5 62-2 94l-37 3Z"/>
+    <path d="M182 574c-23-14-42-12-59-4 24 2 41 10 57 23-21-4-38 1-51 11 20-1 36 3 52 12-13 5-24 14-32 26 15-5 27-8 39-7l-6-61Z"/>
+    <path d="M356 682c5-32 7-63 1-93 17 20 28 51 36 88l-37 5Z"/>
+    <path d="M360 598c18-15 38-21 61-19-17 9-30 20-40 34 18-8 35-8 52-2-14 5-27 13-39 25 16 1 30 7 42 17-16-3-31-2-44 3l-32-58Z"/>
+  </g>
+  <path fill="#ffe7d7" d="M0 662c84-38 149 28 231 9 91-22 143-90 309-37v222H0V662Z"/>
+  <path fill="#ffc8a6" d="M0 698c85-40 149 29 231 10 92-22 146-87 309-35v183H0V698Z"/>
+  <path fill="#f89b63" d="M0 742c84-43 151 27 235 8 91-21 147-80 305-31v137H0V742Z"/>
+  <path fill="#ef6b2e" d="M0 790c87-45 154 25 239 7 88-19 145-68 301-25v84H0V790Z"/>
+</svg>
