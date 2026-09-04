@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f47a31">
+  <meta name="description" content="Generate printable student QR identification cards for PSU Balabac USG attendance.">
+  <title>Student QR ID Generator | PSU Balabac USG</title>
+  <link rel="icon" href="assets/img/usg-logo.png">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script type="module" src="assets/js/generator.js"></script>
+</head>
+<body>
+  <header class="site-header no-print">
+    <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
+      <span class="brand__seals">
+        <img src="assets/img/psu-logo.png" alt="Palawan State University logo">
+        <img src="assets/img/usg-logo.png" alt="University Student Government logo">
+      </span>
+      <span><strong>USG Attendance</strong><small>PSU Balabac Campus</small></span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html">Scanner</a>
+      <a class="is-active" href="generator.html">ID Generator</a>
+      <a href="dashboard.html">Control</a>
+    </nav>
+  </header>
+
+  <main class="page page--wide generator-page">
+    <section class="workspace-panel no-print">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Official student QR ID</p>
+          <h1>Build and print attendance IDs</h1>
+          <p class="lede">Select students from the USG Attendance Sheet. Generate one card with a photo or a printable batch with blank 2×2 photo spaces.</p>
+        </div>
+        <div class="toolbar">
+          <button class="button button--quiet" id="refresh-roster" type="button">Refresh roster</button>
+          <button class="button button--secondary" id="print-cards" type="button" disabled>Print selected</button>
+        </div>
+      </div>
+
+      <section class="login-card" id="generator-login">
+        <div class="number-badge">ID</div>
+        <form id="generator-login-form">
+          <h2>Organizer sign-in</h2>
+          <p>Use the administrator password created during Google Sheet setup.</p>
+          <div class="inline-form">
+            <label class="sr-only" for="generator-password">Administrator password</label>
+            <input type="password" id="generator-password" autocomplete="current-password" placeholder="Administrator password" required>
+            <button class="button button--primary" type="submit">Open roster</button>
+          </div>
+          <div class="status" id="generator-login-status" hidden role="status"></div>
+        </form>
+      </section>
+
+      <section id="generator-tools" hidden>
+        <div class="filter-row">
+          <label class="field field--grow">
+            <span>Find a student</span>
+            <input type="search" id="student-search" placeholder="Search name or student number">
+          </label>
+          <label class="field">
+            <span>Program</span>
+            <select id="program-filter">
+              <option value="">All programs</option>
+              <option value="BEEd">BEEd</option>
+              <option value="BSE">BSE</option>
+              <option value="BSA">BSA</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>2×2 photo for one card</span>
+            <input type="file" id="student-photo" accept="image/*">
+          </label>
+        </div>
+
+        <div class="selection-bar">
+          <label><input type="checkbox" id="select-visible"> Select visible students</label>
+          <span id="selection-count">0 selected</span>
+          <button class="button button--primary button--small" id="generate-cards" type="button" disabled>Generate IDs</button>
+        </div>
+
+        <div class="roster-wrap">
+          <table class="roster-table">
+            <thead><tr><th scope="col">Select</th><th scope="col">Student</th><th scope="col">Student no.</th><th scope="col">Program</th></tr></thead>
+            <tbody id="roster-body"></tbody>
+          </table>
+        </div>
+        <div class="status" id="generator-status" hidden role="status"></div>
+      </section>
+    </section>
+
+    <section class="card-output" aria-labelledby="card-output-title">
+      <div class="output-heading no-print">
+        <div><p class="eyebrow">Print preview</p><h2 id="card-output-title">Generated IDs</h2></div>
+        <button class="button button--quiet button--small" id="download-card" type="button" hidden>Download first ID as PNG</button>
+      </div>
+      <div class="empty-state no-print" id="card-empty">
+        <div class="empty-state__mark">QR</div>
+        <h3>Select students to preview their IDs</h3>
+        <p>The QR contains only the student number; names and programs are verified against the protected roster during scanning.</p>
+      </div>
+      <div class="id-grid" id="id-grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer no-print">Palawan State University – Balabac Campus · University Student Government</footer>
+</body>
+</html>

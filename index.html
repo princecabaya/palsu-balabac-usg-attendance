@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f47a31">
+  <meta name="description" content="QR attendance scanner for Palawan State University – Balabac Campus University Student Government events.">
+  <title>QR Attendance Scanner | PSU Balabac USG</title>
+  <link rel="icon" href="assets/img/usg-logo.png">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
+  <script type="module" src="assets/js/scanner.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
+      <span class="brand__seals">
+        <img src="assets/img/psu-logo.png" alt="Palawan State University logo">
+        <img src="assets/img/usg-logo.png" alt="University Student Government logo">
+      </span>
+      <span><strong>USG Attendance</strong><small>PSU Balabac Campus</small></span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a class="is-active" href="index.html">Scanner</a>
+      <a href="generator.html">ID Generator</a>
+      <a href="dashboard.html">Control</a>
+    </nav>
+  </header>
+
+  <main class="page page--scanner">
+    <section class="scanner-shell" aria-labelledby="scanner-title">
+      <div class="scanner-heading">
+        <div>
+          <p class="eyebrow">Live attendance</p>
+          <h1 id="scanner-title">Scan student QR</h1>
+        </div>
+        <span class="connection-pill" id="connection-pill"><i></i> Locked</span>
+      </div>
+
+      <section class="event-strip" id="event-strip" hidden>
+        <div>
+          <small>Active event</small>
+          <strong id="event-name">—</strong>
+        </div>
+        <div>
+          <small>Venue</small>
+          <span id="event-venue">—</span>
+        </div>
+        <button class="button button--quiet button--small" id="change-code" type="button">Change code</button>
+      </section>
+
+      <section class="unlock-panel" id="unlock-panel">
+        <div class="number-badge">01</div>
+        <div>
+          <h2>Enter the checker control code</h2>
+          <p>Ask the event organizer for the current eight-character code.</p>
+          <form id="unlock-form" class="inline-form">
+            <label class="sr-only" for="control-code">Control code</label>
+            <input id="control-code" name="controlCode" inputmode="text" autocomplete="one-time-code" maxlength="9" placeholder="ABCD-2345" required>
+            <button class="button button--primary" type="submit">Unlock scanner</button>
+          </form>
+          <div class="status" id="unlock-status" hidden role="status"></div>
+        </div>
+      </section>
+
+      <section class="scan-panel" id="scan-panel" hidden>
+        <div id="qr-reader" class="qr-reader" aria-label="Camera preview"></div>
+        <div class="scanner-actions">
+          <button class="button button--primary" id="start-camera" type="button">Start camera</button>
+          <button class="button button--quiet" id="stop-camera" type="button" hidden>Stop camera</button>
+          <label class="button button--quiet" for="qr-file">Scan saved image</label>
+          <input class="sr-only" id="qr-file" type="file" accept="image/*" capture="environment">
+        </div>
+        <details class="manual-entry">
+          <summary>Camera unavailable? Enter the student number</summary>
+          <form id="manual-form" class="inline-form inline-form--compact">
+            <label class="sr-only" for="student-number">Student number</label>
+            <input id="student-number" autocomplete="off" placeholder="2026-10-0001BL" required>
+            <button class="button button--secondary" type="submit">Record</button>
+          </form>
+        </details>
+      </section>
+
+      <section class="scan-result" id="scan-result" hidden aria-live="assertive">
+        <div class="result-icon" aria-hidden="true">✓</div>
+        <div>
+          <p class="result-kicker" id="result-action">Attendance recorded</p>
+          <h2 id="result-name">Student name</h2>
+          <p><span id="result-number"></span> · <span id="result-program"></span></p>
+          <time id="result-time"></time>
+        </div>
+      </section>
+      <div class="status" id="scan-status" hidden role="alert"></div>
+    </section>
+
+    <aside class="scanner-aside">
+      <div class="aside-art" aria-hidden="true">
+        <span class="arc arc--orange"></span>
+        <span class="arc arc--blue"></span>
+        <span class="arc arc--green"></span>
+        <img src="assets/img/usg-logo.png" alt="">
+      </div>
+      <p class="eyebrow">Checker reminder</p>
+      <h2>Confirm the student’s face and name before accepting the scan.</h2>
+      <ol class="steps-list">
+        <li><span>1</span> Enter the organizer’s control code.</li>
+        <li><span>2</span> Point the rear camera at the ID QR.</li>
+        <li><span>3</span> Wait for the green confirmation.</li>
+      </ol>
+    </aside>
+  </main>
+
+  <footer class="site-footer">Palawan State University – Balabac Campus · University Student Government</footer>
+</body>
+</html>

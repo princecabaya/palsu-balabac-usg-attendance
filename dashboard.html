@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f47a31">
+  <meta name="description" content="Organizer control dashboard for PSU Balabac USG event attendance.">
+  <title>Attendance Control | PSU Balabac USG</title>
+  <link rel="icon" href="assets/img/usg-logo.png">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="assets/js/config.js"></script>
+  <script type="module" src="assets/js/dashboard.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
+      <span class="brand__seals">
+        <img src="assets/img/psu-logo.png" alt="Palawan State University logo">
+        <img src="assets/img/usg-logo.png" alt="University Student Government logo">
+      </span>
+      <span><strong>USG Attendance</strong><small>PSU Balabac Campus</small></span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html">Scanner</a>
+      <a href="generator.html">ID Generator</a>
+      <a class="is-active" href="dashboard.html">Control</a>
+    </nav>
+  </header>
+
+  <main class="page page--wide dashboard-page">
+    <section class="section-heading">
+      <div>
+        <p class="eyebrow">Organizer control</p>
+        <h1>Events and checker access</h1>
+        <p class="lede">Create an event, issue a short-lived control code, and monitor attendance totals from the Google Sheet.</p>
+      </div>
+      <button class="button button--quiet" id="admin-logout" type="button" hidden>Sign out</button>
+    </section>
+
+    <section class="setup-card" id="api-setup">
+      <span class="setup-card__number">1</span>
+      <div>
+        <h2>Connect the attendance server</h2>
+        <p>Paste the web app URL ending in <code>/exec</code>. It stays on this device unless it is added permanently to <code>assets/js/config.js</code>.</p>
+        <form class="inline-form" id="api-form">
+          <label class="sr-only" for="api-url">Apps Script web app URL</label>
+          <input type="url" id="api-url" placeholder="https://script.google.com/macros/s/.../exec" required>
+          <button class="button button--secondary" type="submit">Save connection</button>
+        </form>
+        <div class="status" id="api-status" hidden role="status"></div>
+      </div>
+    </section>
+
+    <section class="login-card" id="admin-login">
+      <div class="number-badge">02</div>
+      <form id="admin-login-form">
+        <h2>Administrator sign-in</h2>
+        <p>Your password never appears in the web request; the browser sends a one-time proof.</p>
+        <div class="inline-form">
+          <label class="sr-only" for="admin-password">Administrator password</label>
+          <input type="password" id="admin-password" autocomplete="current-password" placeholder="Administrator password" required>
+          <button class="button button--primary" type="submit">Open control</button>
+        </div>
+        <div class="status" id="admin-login-status" hidden role="status"></div>
+      </form>
+    </section>
+
+    <section id="dashboard-content" hidden>
+      <div class="dashboard-grid">
+        <form class="panel event-form" id="event-form">
+          <div class="panel__heading"><div><p class="eyebrow">New event</p><h2>Create attendance sheet</h2></div></div>
+          <label class="field"><span>Event name</span><input id="event-name-input" required maxlength="100" placeholder="e.g., General Assembly"></label>
+          <label class="field"><span>Venue</span><input id="event-venue-input" required maxlength="100" placeholder="e.g., Campus Activity Center"></label>
+          <div class="two-fields">
+            <label class="field"><span>Event date</span><input type="date" id="event-date-input" required></label>
+            <label class="field"><span>Start time</span><input type="time" id="event-time-input" required></label>
+          </div>
+          <label class="field"><span>Control code expires</span><input type="datetime-local" id="event-expiry-input" required></label>
+          <p class="field-note">The event sheet supports first time in/out and second time in/out. A repeat scan within 30 seconds is ignored.</p>
+          <button class="button button--primary" type="submit">Create event and code</button>
+          <div class="status" id="event-form-status" hidden role="status"></div>
+        </form>
+
+        <section class="panel code-panel" id="code-panel">
+          <div class="panel__heading"><div><p class="eyebrow">Checker access</p><h2>Current control code</h2></div></div>
+          <div class="code-empty" id="code-empty">
+            <span>— — — —</span>
+            <p>Create an event or rotate its code. For security, a code is displayed only when issued on this device.</p>
+          </div>
+          <div id="code-result" hidden>
+            <p class="code-event" id="code-event-name">Event</p>
+            <output class="control-code" id="control-code-output">ABCD-2345</output>
+            <p id="code-expiry">Expires —</p>
+            <div class="toolbar toolbar--center">
+              <button class="button button--secondary" id="copy-code" type="button">Copy code</button>
+              <button class="button button--quiet" id="copy-link" type="button">Copy scanner link</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel events-panel">
+        <div class="panel__heading">
+          <div><p class="eyebrow">Google Sheet events</p><h2>Attendance overview</h2></div>
+          <button class="button button--quiet button--small" id="refresh-events" type="button">Refresh totals</button>
+        </div>
+        <div class="event-cards" id="event-cards"></div>
+        <div class="empty-state" id="events-empty"><h3>No events yet</h3><p>Create the first event to prepare its attendance sheet and issue a checker code.</p></div>
+        <div class="status" id="events-status" hidden role="status"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">Palawan State University – Balabac Campus · University Student Government</footer>
+
+  <dialog class="dialog" id="confirm-dialog">
+    <form method="dialog">
+      <h2 id="dialog-title">Confirm action</h2>
+      <p id="dialog-message"></p>
+      <div class="toolbar toolbar--end">
+        <button class="button button--quiet" value="cancel">Cancel</button>
+        <button class="button button--danger" id="dialog-confirm" value="confirm">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
