@@ -159,10 +159,9 @@ function createCard(student, picture) {
   card.className = "student-id";
   card.setAttribute("aria-label", `QR ID for ${student.name}`);
   card.innerHTML = `
-    <div class="id-ribbon"></div>
     <header class="id-header">
       <img src="assets/img/psu-logo.png" alt="">
-      <div><strong>PALAWAN STATE UNIVERSITY</strong><small>Balabac Campus · Student QR ID</small></div>
+      <div><strong>PALAWAN STATE UNIVERSITY</strong><small>BALABAC CAMPUS · USG</small></div>
       <img src="assets/img/usg-logo.png" alt="">
     </header>
     <div class="id-photo">${picture ? `<img src="${picture}" alt="2×2 photo of ${escapeHtml(student.name)}">` : "2×2 ID<br>PHOTO"}</div>
@@ -172,10 +171,9 @@ function createCard(student, picture) {
       <p class="program-name">${escapeHtml(programLabel(student.program))}</p>
     </div>
     <div class="id-bottom">
-      <p><strong>USG ATTENDANCE</strong>Present this QR ID to the assigned checker.</p>
+      <p><strong>USG ATTENDANCE</strong>Present to the assigned checker.</p>
       <div class="id-qr" aria-label="Attendance QR code"></div>
     </div>
-    <div class="id-accent"></div>
   `;
   return card;
 }
