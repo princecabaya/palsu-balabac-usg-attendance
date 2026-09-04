@@ -16,7 +16,7 @@ const jsFiles = [
 ];
 
 const errors = [];
-for (const file of [...htmlFiles, ...jsFiles, "assets/css/styles.css", "assets/img/psu-logo.png", "assets/img/usg-logo.png"]) {
+for (const file of [...htmlFiles, ...jsFiles, "assets/css/styles.css", "assets/img/psu-logo.png", "assets/img/usg-logo.png", "assets/img/id-card-art.svg"]) {
   if (!fs.existsSync(path.join(root, file))) errors.push(`Missing required file: ${file}`);
 }
 
