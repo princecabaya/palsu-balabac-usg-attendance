@@ -7,9 +7,9 @@
   <meta name="description" content="Organizer control dashboard for PSU Balabac USG event attendance.">
   <title>Attendance Control | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css">
-  <script src="assets/js/config.js"></script>
-  <script type="module" src="assets/js/dashboard.js"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260905.1">
+  <script src="assets/js/config.js?v=20260905.1"></script>
+  <script type="module" src="assets/js/dashboard.js?v=20260905.1"></script>
 </head>
 <body>
   <header class="site-header">
@@ -93,8 +93,9 @@
             <p id="code-expiry">Expires —</p>
             <div class="toolbar toolbar--center">
               <button class="button button--secondary" id="copy-code" type="button">Copy code</button>
-              <button class="button button--quiet" id="copy-link" type="button">Copy scanner link</button>
+              <button class="button button--quiet" id="copy-link" type="button">Copy scanner-only link</button>
             </div>
+            <p class="code-note">The shared link contains no organizer pages and never includes the current control code.</p>
           </div>
         </section>
       </div>

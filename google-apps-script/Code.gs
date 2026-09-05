@@ -337,13 +337,75 @@ function scanAction_(parameters) {
         studentNumber: student.studentNumber,
         program: student.program
       },
-      event: publicEvent_(record)
+      event: publicEvent_(record),
+      history: getStudentAttendanceHistory_(student.studentNumber)
     };
     if (requestCacheKey) cache.put(requestCacheKey, JSON.stringify(response), 300);
     return response;
   } finally {
     lock.releaseLock();
   }
+}
+
+function getStudentAttendanceHistory_(studentNumber) {
+  const spreadsheet = getSpreadsheet_();
+  const records = getControlRecords_().sort(function(a, b) {
+    if (a.eventDate === b.eventDate) return b.eventNo - a.eventNo;
+    return String(a.eventDate).localeCompare(String(b.eventDate)) * -1;
+  });
+
+  return records.reduce(function(history, record) {
+    const sheet = spreadsheet.getSheetByName(record.sheetName);
+    if (!sheet) return history;
+    const row = findStudentRow_(sheet, studentNumber);
+    if (!row) return history;
+
+    const values = sheet.getRange(row, 5, 1, 5).getValues()[0];
+    const scans = values.slice(1, 5);
+    if (!scans.some(function(value) { return value instanceof Date; })) return history;
+    const totalSeconds = attendanceDurationSeconds_(scans);
+
+    history.push({
+      eventNo: record.eventNo,
+      eventName: record.name,
+      venue: record.venue,
+      eventDate: record.eventDate,
+      attendanceDate: values[0] instanceof Date ? Utilities.formatDate(values[0], TIME_ZONE, "yyyy-MM-dd") : record.eventDate,
+      firstTimeIn: dateToIso_(scans[0]),
+      firstTimeOut: dateToIso_(scans[1]),
+      secondTimeIn: dateToIso_(scans[2]),
+      secondTimeOut: dateToIso_(scans[3]),
+      totalSeconds: totalSeconds,
+      totalTime: formatDurationSeconds_(totalSeconds),
+      status: record.status
+    });
+    return history;
+  }, []);
+}
+
+function dateToIso_(value) {
+  return value instanceof Date ? value.toISOString() : "";
+}
+
+function attendanceDurationSeconds_(scans) {
+  const values = scans || [];
+  let milliseconds = 0;
+  if (values[0] instanceof Date && values[1] instanceof Date && values[1] >= values[0]) {
+    milliseconds += values[1].getTime() - values[0].getTime();
+  }
+  if (values[2] instanceof Date && values[3] instanceof Date && values[3] >= values[2]) {
+    milliseconds += values[3].getTime() - values[2].getTime();
+  }
+  return Math.floor(milliseconds / 1000);
+}
+
+function formatDurationSeconds_(seconds) {
+  const total = Math.max(0, Number(seconds) || 0);
+  if (!total) return "";
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const remaining = Math.floor(total % 60);
+  return [hours, minutes, remaining].map(function(value) { return String(value).padStart(2, "0"); }).join(":");
 }
 
 function getStudents_() {

@@ -175,6 +175,43 @@ input::placeholder { color: #93a1ab; }
 .scan-result p, .scan-result time { color: #3f6c50; }
 .result-kicker { font-size: 0.78rem; font-weight: 850; letter-spacing: 0.09em; text-transform: uppercase; }
 
+.scanner-only-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 78px;
+  padding: 0.65rem clamp(1rem, 4vw, 4rem);
+  background: white;
+  border-top: 5px solid var(--orange);
+  border-bottom: 1px solid var(--line);
+}
+.checker-mode { padding: 0.5rem 0.75rem; color: var(--orange-dark); background: var(--peach-pale); border: 1px solid #f3c5a5; border-radius: 999px; font-size: 0.75rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.attendance-report { margin-top: 1.25rem; padding: clamp(1rem, 3vw, 1.5rem); background: white; border: 1px solid var(--line); border-radius: 18px; }
+.report-brand { display: flex; align-items: center; gap: 0.7rem; padding-bottom: 0.9rem; border-bottom: 3px solid var(--orange); }
+.report-brand > span:last-child { display: grid; gap: 0.1rem; }
+.report-brand strong { font-size: 0.84rem; letter-spacing: 0.03em; }
+.report-brand small { color: var(--muted); font-size: 0.72rem; }
+.report-brand__seals { display: flex; }
+.report-brand__seals img { width: 38px; height: 38px; padding: 2px; object-fit: contain; background: white; border: 1px solid var(--line); border-radius: 50%; }
+.report-brand__seals img + img { margin-left: -9px; }
+.report-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-top: 1rem; }
+.report-heading h2 { margin-bottom: 0.2rem; }
+.report-heading p { margin-bottom: 0; color: var(--muted); }
+.report-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+.report-stat { display: inline-flex; align-items: baseline; gap: 0.45rem; margin: 1rem 0 0.7rem; padding: 0.55rem 0.8rem; color: var(--blue-dark); background: #e8f5fb; border-radius: 11px; }
+.report-stat strong { font-size: 1.35rem; }
+.report-stat span { font-size: 0.8rem; font-weight: 750; }
+.report-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+.report-table { width: 100%; min-width: 790px; border-collapse: collapse; font-size: 0.78rem; }
+.report-table th { padding: 0.65rem; color: var(--ink); background: var(--peach); text-align: left; white-space: nowrap; }
+.report-table td { padding: 0.65rem; border-top: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
+.report-table td:first-child { min-width: 165px; white-space: normal; }
+.report-table td small { display: block; margin-top: 0.2rem; color: var(--muted); }
+.report-empty { margin: 0.8rem 0 0; padding: 0.9rem; color: var(--muted); background: var(--canvas); border-radius: 10px; text-align: center; }
+.report-generated { margin: 0.75rem 0 0; color: var(--muted); font-size: 0.72rem; text-align: right; }
+
 .status { margin-top: 0.85rem; padding: 0.78rem 0.9rem; border-radius: 11px; font-size: 0.9rem; line-height: 1.4; }
 .status--info { color: var(--blue-dark); background: #e8f5fb; border: 1px solid #baddec; }
 .status--success { color: #245e38; background: var(--green-pale); border: 1px solid #b8dfc6; }
@@ -267,6 +304,7 @@ input::placeholder { color: #93a1ab; }
 .code-panel { display: grid; align-content: start; text-align: center; background: linear-gradient(150deg, var(--ink), var(--blue-dark)); color: white; border: 0; }
 .code-panel .eyebrow { color: var(--peach); }
 .code-panel .panel__heading { text-align: left; }
+.code-note { margin: 0.8rem 0 0; color: #c7d8e3; font-size: 0.75rem; line-height: 1.4; }
 .code-empty { display: grid; place-items: center; min-height: 245px; }
 .code-empty span { font-size: 2rem; letter-spacing: 0.2em; opacity: 0.45; }
 .code-empty p { max-width: 340px; color: #c7d8e3; font-size: 0.86rem; }
@@ -326,6 +364,18 @@ input::placeholder { color: #93a1ab; }
   .selection-bar .button { width: 100%; }
   .roster-table th:nth-child(4), .roster-table td:nth-child(4) { display: none; }
   .id-grid { grid-template-columns: 1fr; }
+  .scanner-only-header { display: grid; justify-items: center; padding: 0.75rem 1rem; }
+  .report-heading { display: grid; }
+  .report-actions { justify-content: stretch; }
+  .report-actions .button { flex: 1; }
+  .report-table-wrap { overflow: visible; border: 0; }
+  .report-table { display: block; min-width: 0; }
+  .report-table thead { display: none; }
+  .report-table tbody { display: grid; gap: 0.75rem; }
+  .report-table tr { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; }
+  .report-table td, .report-table td:first-child { display: grid; grid-template-columns: 78px 1fr; min-width: 0; padding: 0.55rem 0.65rem; white-space: normal; }
+  .report-table td:first-child { grid-column: 1 / -1; background: var(--peach-pale); }
+  .report-table td::before { content: attr(data-label); color: var(--muted); font-size: 0.68rem; font-weight: 800; text-transform: uppercase; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -339,4 +389,23 @@ input::placeholder { color: #93a1ab; }
   .page, .page--wide, .generator-page, .card-output { display: block; width: auto; margin: 0; padding: 0; border: 0; box-shadow: none; background: white; }
   .id-grid { display: grid; grid-template-columns: repeat(3, 54mm); gap: 5mm 6mm; justify-content: center; }
   .student-id { break-inside: avoid; margin: 0; box-shadow: none; }
+  body.printing-attendance-report .scanner-only-header,
+  body.printing-attendance-report .site-header,
+  body.printing-attendance-report .site-footer,
+  body.printing-attendance-report .scanner-aside,
+  body.printing-attendance-report .scanner-shell > :not(.attendance-report) { display: none !important; }
+  body.printing-attendance-report .page--scanner,
+  body.printing-attendance-report .scanner-shell { display: block; width: auto; min-height: 0; margin: 0; padding: 0; border: 0; box-shadow: none; }
+  body.printing-attendance-report .attendance-report { display: block !important; margin: 0; padding: 0; border: 0; }
+  body.printing-attendance-report .report-actions { display: none !important; }
+  body.printing-attendance-report .report-table-wrap { overflow: visible; }
+  body.printing-attendance-report .report-table { display: table; min-width: 0; font-size: 8pt; }
+  body.printing-attendance-report .report-table thead { display: table-header-group; }
+  body.printing-attendance-report .report-table tbody { display: table-row-group; }
+  body.printing-attendance-report .report-table tr { display: table-row; border: 0; }
+  body.printing-attendance-report .report-table td,
+  body.printing-attendance-report .report-table td:first-child { display: table-cell; min-width: 0; background: white; white-space: normal; }
+  body.printing-attendance-report .report-table td::before { content: none; }
+  body.printing-attendance-report .report-table th,
+  body.printing-attendance-report .report-table td { padding: 5pt; }
 }

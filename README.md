@@ -5,6 +5,7 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 ## Included
 
 - Live rear-camera QR scanner plus saved-image and manual student-number fallbacks
+- Navigation-free `scanner.html` for authorized student representatives
 - Organizer-issued eight-character control codes with expiry, rotation, and event ending
 - Separate organizer Control Dashboard
 - Protected QR ID Generator that reads the existing 400-student roster
@@ -13,6 +14,7 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 - Automatic first time in, first time out, second time in, and second time out
 - Duplicate-scan protection for 30 seconds
 - Live summary totals by program in the existing Attendance Summary sheet
+- Per-student event history with printable/PDF and CSV time-in/time-out reports after each successful scan
 
 ## Sheet compatibility
 
@@ -46,7 +48,9 @@ Open [`assets/js/config.js`](assets/js/config.js) and paste the `/exec` URL:
 apiUrl: "https://script.google.com/macros/s/DEPLOYMENT_ID/exec",
 ```
 
-You may also paste the URL into the Control Dashboard for device-only setup. Scanner links copied by the dashboard carry the public Apps Script endpoint automatically, but they still require the event control code.
+You may also paste the URL into the Control Dashboard for device-only setup. The dashboard copies the navigation-free `scanner.html` link. The control code is never included in that link and is cleared from the checker page after sign-in.
+
+When updating an existing Apps Script installation, replace `Code.gs`, save, then open **Deploy → Manage deployments → Edit → New version → Deploy**. Updating the existing deployment keeps the configured `/exec` URL.
 
 ## 3. Publish with GitHub Pages
 
@@ -60,11 +64,12 @@ The included workflow deploys every push to `main`.
 ## Event-day workflow
 
 1. The organizer opens `dashboard.html`, signs in, and creates an event.
-2. The dashboard displays a new control code once. The organizer gives it to assigned checkers or copies the scanner link.
-3. A checker opens `index.html`, enters the code, starts the rear camera, and scans student IDs.
+2. The dashboard displays a new control code once. The organizer separately gives the code and the copied scanner-only link to assigned checkers.
+3. A checker opens `scanner.html`, enters the code, starts the rear camera, and scans student IDs. The page has no links to organizer tools and does not retain the entered code.
 4. The server verifies the student number against the protected roster and fills the next available time slot.
-5. The organizer refreshes the dashboard to see BEEd, BSE, BSA, and total attendance.
-6. The organizer ends the event when attendance collection is complete.
+5. The scanner shows that student’s attended events and all recorded time-in/time-out slots. The report can be printed, saved as PDF, or downloaded as CSV.
+6. The organizer refreshes the dashboard to see BEEd, BSE, BSA, and total attendance.
+7. The organizer ends the event when attendance collection is complete.
 
 ## QR ID printing
 

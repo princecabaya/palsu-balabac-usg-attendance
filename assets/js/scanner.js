@@ -1,5 +1,5 @@
-import { clearScannerSession, getApiUrl, getScannerSession, jsonp, makeRequestId, normalizeControlCode, scannerLogin } from "./api.js";
-import { clearStatus, formatDateTime, setStatus } from "./common.js";
+import { clearScannerSession, getApiUrl, getScannerSession, jsonp, makeRequestId, normalizeControlCode, scannerLogin } from "./api.js?v=20260905.1";
+import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js?v=20260905.1";
 import { parseQrPayload } from "./qr-payload.js";
 
 const elements = {
@@ -25,6 +25,15 @@ const elements = {
   resultNumber: document.querySelector("#result-number"),
   resultProgram: document.querySelector("#result-program"),
   resultTime: document.querySelector("#result-time"),
+  report: document.querySelector("#attendance-report"),
+  reportName: document.querySelector("#report-student-name"),
+  reportMeta: document.querySelector("#report-student-meta"),
+  reportCount: document.querySelector("#report-event-count"),
+  reportBody: document.querySelector("#report-body"),
+  reportEmpty: document.querySelector("#report-empty"),
+  reportGenerated: document.querySelector("#report-generated-at"),
+  printReport: document.querySelector("#print-report"),
+  downloadReport: document.querySelector("#download-report"),
 };
 
 let session = getScannerSession();
@@ -33,6 +42,7 @@ let cameraRunning = false;
 let processing = false;
 let lastValue = "";
 let lastHandledAt = 0;
+let currentReport = null;
 
 elements.controlCode.addEventListener("input", () => {
   elements.controlCode.value = formatControlCode(elements.controlCode.value);
@@ -53,6 +63,7 @@ elements.unlockForm.addEventListener("submit", async (event) => {
   button.textContent = "Checking…";
   try {
     session = await scannerLogin(elements.controlCode.value);
+    elements.controlCode.value = "";
     unlockWithSession(session);
   } catch (error) {
     setStatus(elements.unlockStatus, error.message, "error");
@@ -72,6 +83,8 @@ elements.changeCode.addEventListener("click", async () => {
 
 elements.startCamera.addEventListener("click", startCamera);
 elements.stopCamera.addEventListener("click", stopCamera);
+elements.printReport.addEventListener("click", printAttendanceReport);
+elements.downloadReport.addEventListener("click", downloadAttendanceReport);
 
 elements.qrFile.addEventListener("change", async () => {
   const file = elements.qrFile.files?.[0];
@@ -101,6 +114,8 @@ function showLocked() {
   elements.eventStrip.hidden = true;
   elements.scanPanel.hidden = true;
   elements.result.hidden = true;
+  elements.report.hidden = true;
+  currentReport = null;
   elements.connectionPill.classList.remove("is-live");
   elements.connectionPill.innerHTML = "<i></i> Locked";
 }
@@ -181,6 +196,7 @@ async function recordAttendance({ studentNumber, qrPayload = "" }) {
       requestId: makeRequestId(),
     });
     showResult(result);
+    showAttendanceReport(result);
     confirmationTone();
   } catch (error) {
     if (error.code === "SESSION_EXPIRED" || error.code === "EVENT_ENDED") {
@@ -194,6 +210,101 @@ async function recordAttendance({ studentNumber, qrPayload = "" }) {
   } finally {
     processing = false;
   }
+}
+
+function showAttendanceReport(result) {
+  const history = Array.isArray(result.history) ? result.history : [];
+  currentReport = {
+    student: result.student,
+    history,
+    generatedAt: new Date().toISOString(),
+  };
+
+  elements.report.hidden = false;
+  elements.reportName.textContent = result.student.name;
+  elements.reportMeta.textContent = `${result.student.studentNumber} · ${result.student.program}`;
+  elements.reportCount.textContent = String(history.length);
+  elements.reportGenerated.textContent = formatDateTime(currentReport.generatedAt);
+  elements.reportEmpty.hidden = history.length > 0;
+  elements.reportBody.innerHTML = history.map((item) => `
+    <tr>
+      <td data-label="Event"><strong>${escapeHtml(item.eventName)}</strong><small>${escapeHtml(item.venue || "No venue")}</small></td>
+      <td data-label="Date">${escapeHtml(formatReportDate(item.attendanceDate || item.eventDate))}</td>
+      <td data-label="First in">${escapeHtml(formatReportTime(item.firstTimeIn))}</td>
+      <td data-label="First out">${escapeHtml(formatReportTime(item.firstTimeOut))}</td>
+      <td data-label="Second in">${escapeHtml(formatReportTime(item.secondTimeIn))}</td>
+      <td data-label="Second out">${escapeHtml(formatReportTime(item.secondTimeOut))}</td>
+      <td data-label="Total">${escapeHtml(item.totalTime || "—")}</td>
+    </tr>
+  `).join("");
+}
+
+function printAttendanceReport() {
+  if (!currentReport) return;
+  document.body.classList.add("printing-attendance-report");
+  window.addEventListener("afterprint", () => document.body.classList.remove("printing-attendance-report"), { once: true });
+  window.print();
+}
+
+function downloadAttendanceReport() {
+  if (!currentReport) return;
+  const headings = ["Event", "Venue", "Attendance Date", "First Time In", "First Time Out", "Second Time In", "Second Time Out", "Total Time"];
+  const rows = currentReport.history.map((item) => [
+    item.eventName,
+    item.venue,
+    item.attendanceDate || item.eventDate,
+    formatReportTime(item.firstTimeIn),
+    formatReportTime(item.firstTimeOut),
+    formatReportTime(item.secondTimeIn),
+    formatReportTime(item.secondTimeOut),
+    item.totalTime || "",
+  ]);
+  const preface = [
+    ["Palawan State University – Balabac Campus"],
+    ["USG Student Attendance Report"],
+    ["Student", currentReport.student.name],
+    ["Student Number", currentReport.student.studentNumber],
+    ["Program", currentReport.student.program],
+    ["Generated", formatDateTime(currentReport.generatedAt)],
+    [],
+  ];
+  const csv = [...preface, headings, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `USG-Attendance-${safeFilename(currentReport.student.studentNumber)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatReportDate(value) {
+  if (!value) return "—";
+  const parts = String(value).split("-").map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return String(value);
+  return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeZone: "Asia/Manila" })
+    .format(new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])));
+}
+
+function formatReportTime(value) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Manila",
+  }).format(new Date(value));
+}
+
+function csvCell(value = "") {
+  let text = String(value);
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function safeFilename(value) {
+  return String(value || "student").replace(/[^A-Z0-9_-]/gi, "-");
 }
 
 function showResult(result) {

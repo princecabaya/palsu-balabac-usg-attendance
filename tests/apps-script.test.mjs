@@ -60,3 +60,16 @@ test("text written to Sheets cannot be interpreted as a formula", () => {
   assert.equal(context.safeCellText_("=IMPORTXML(\"x\")"), "'=IMPORTXML(\"x\")");
   assert.equal(context.safeCellText_("General Assembly"), "General Assembly");
 });
+
+test("attendance duration totals only completed time-in/time-out pairs", () => {
+  const scans = [
+    new Date("2026-09-05T00:00:00Z"),
+    new Date("2026-09-05T01:30:00Z"),
+    new Date("2026-09-05T04:00:00Z"),
+    new Date("2026-09-05T04:45:00Z"),
+  ];
+  assert.equal(context.attendanceDurationSeconds_(scans), 8100);
+  assert.equal(context.formatDurationSeconds_(8100), "02:15:00");
+  assert.equal(context.attendanceDurationSeconds_([scans[0], "", scans[2], ""]), 0);
+  assert.equal(context.formatDurationSeconds_(0), "");
+});

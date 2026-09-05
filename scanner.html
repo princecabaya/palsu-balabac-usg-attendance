@@ -4,28 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f47a31">
-  <meta name="description" content="QR attendance scanner for Palawan State University – Balabac Campus University Student Government events.">
-  <title>QR Attendance Scanner | PSU Balabac USG</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Dedicated QR attendance scanner for authorized PSU Balabac USG event checkers.">
+  <title>Authorized QR Scanner | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
   <link rel="stylesheet" href="assets/css/styles.css?v=20260905.1">
   <script src="assets/js/config.js?v=20260905.1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
   <script type="module" src="assets/js/scanner.js?v=20260905.1"></script>
 </head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
+<body class="scanner-only-page">
+  <header class="scanner-only-header">
+    <div class="brand" aria-label="PSU Balabac USG Attendance">
       <span class="brand__seals">
         <img src="assets/img/psu-logo.png" alt="Palawan State University logo">
         <img src="assets/img/usg-logo.png" alt="University Student Government logo">
       </span>
       <span><strong>USG Attendance</strong><small>PSU Balabac Campus</small></span>
-    </a>
-    <nav class="nav" aria-label="Main navigation">
-      <a class="is-active" href="index.html">Scanner</a>
-      <a href="generator.html">ID Generator</a>
-      <a href="dashboard.html">Control</a>
-    </nav>
+    </div>
+    <span class="checker-mode">Authorized checker</span>
   </header>
 
   <main class="page page--scanner">
@@ -47,14 +44,14 @@
           <small>Venue</small>
           <span id="event-venue">—</span>
         </div>
-        <button class="button button--quiet button--small" id="change-code" type="button">Change code</button>
+        <button class="button button--quiet button--small" id="change-code" type="button">Use another code</button>
       </section>
 
       <section class="unlock-panel" id="unlock-panel">
         <div class="number-badge">01</div>
         <div>
           <h2>Enter the checker control code</h2>
-          <p>Ask the event organizer for the current eight-character code.</p>
+          <p>Ask the event organizer for the current eight-character code. It is cleared from this page after access is granted.</p>
           <form id="unlock-form" class="inline-form">
             <label class="sr-only" for="control-code">Control code</label>
             <input id="control-code" name="controlCode" inputmode="text" autocomplete="one-time-code" maxlength="9" placeholder="ABCD-2345" required>
@@ -136,7 +133,7 @@
       <ol class="steps-list">
         <li><span>1</span> Enter the organizer’s control code.</li>
         <li><span>2</span> Point the rear camera at the ID QR.</li>
-        <li><span>3</span> Wait for the green confirmation.</li>
+        <li><span>3</span> Check the confirmation and attendance history.</li>
       </ol>
     </aside>
   </main>

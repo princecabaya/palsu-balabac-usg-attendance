@@ -137,8 +137,9 @@ export function makeRequestId() {
 }
 
 export function buildScannerLink() {
-  const url = new URL("index.html", location.href);
+  const url = new URL("scanner.html", location.href);
   const apiUrl = getApiUrl();
-  if (apiUrl) url.searchParams.set("api", apiUrl);
+  const configuredApiUrl = window.USG_ATTENDANCE_CONFIG?.apiUrl || "";
+  if (!configuredApiUrl && apiUrl) url.searchParams.set("api", apiUrl);
   return url.toString();
 }

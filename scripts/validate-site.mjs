@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import vm from "node:vm";
 
 const root = process.cwd();
-const htmlFiles = ["index.html", "generator.html", "dashboard.html"];
+const htmlFiles = ["index.html", "scanner.html", "generator.html", "dashboard.html"];
 const jsFiles = [
   "assets/js/config.js",
   "assets/js/api.js",
