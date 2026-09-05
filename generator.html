@@ -7,13 +7,13 @@
   <meta name="description" content="Generate printable student QR identification cards for PSU Balabac USG attendance.">
   <title>Student QR ID Generator | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260904.2">
-  <script src="assets/js/config.js?v=20260904.2"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260905.3">
+  <script src="assets/js/config.js?v=20260905.3"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-  <script type="module" src="assets/js/generator.js?v=20260904.2"></script>
+  <script type="module" src="assets/js/generator.js?v=20260905.3"></script>
 </head>
-<body>
+<body class="generator-body">
   <header class="site-header no-print">
     <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
       <span class="brand__seals">
@@ -35,11 +35,11 @@
         <div>
           <p class="eyebrow">Official student QR ID</p>
           <h1>Build and print attendance IDs</h1>
-          <p class="lede">Select students from the USG Attendance Sheet. Generate one card with a photo or a printable batch with blank 2×2 photo spaces.</p>
+          <p class="lede">Select students from the USG Attendance Sheet. Generate A6 portrait IDs with equal-size photo and QR panels plus a student signature line.</p>
         </div>
         <div class="toolbar">
           <button class="button button--quiet" id="refresh-roster" type="button">Refresh roster</button>
-          <button class="button button--secondary" id="print-cards" type="button" disabled>Print selected</button>
+          <button class="button button--secondary" id="print-cards" type="button" disabled>Print A6 IDs</button>
         </div>
       </div>
 
@@ -97,7 +97,7 @@
     <section class="card-output" aria-labelledby="card-output-title">
       <div class="output-heading no-print">
         <div><p class="eyebrow">Print preview</p><h2 id="card-output-title">Generated IDs</h2></div>
-        <button class="button button--quiet button--small" id="download-card" type="button" hidden>Download first ID as PNG</button>
+        <button class="button button--quiet button--small" id="download-card" type="button" hidden>Download first A6 ID as PNG</button>
       </div>
       <div class="empty-state no-print" id="card-empty">
         <div class="empty-state__mark">QR</div>

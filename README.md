@@ -9,7 +9,7 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 - Organizer-issued eight-character control codes with expiry, rotation, and event ending
 - Separate organizer Control Dashboard
 - Protected QR ID Generator that reads the existing 400-student roster
-- Printable portrait IDs with PSU and USG logos, square 2×2 photo space, name, student number, and program
+- Printable A6 portrait IDs with PSU and USG logos, equal-size photo and QR panels, student details, and a signature line
 - BEEd, BSE, and BSA program support
 - Automatic first time in, first time out, second time in, and second time out
 - Duplicate-scan protection for 30 seconds
@@ -73,7 +73,7 @@ The included workflow deploys every push to `main`.
 
 ## QR ID printing
 
-Open `generator.html`, sign in with the organizer password, and load the roster. Select one student to apply and download a 2×2 photo card, or select a group to print blank photo-space IDs on A4 paper. QR codes contain only a version marker and student number; the Google Sheet remains the source of truth for the name and program.
+Open `generator.html`, sign in with the organizer password, and load the roster. Select one student to apply and download a 2×2-style photo card, or select a group to print blank photo-space IDs. Every card is 105 × 148 mm (A6 portrait), with the photo and QR code aligned side by side at the same size and a blank student-signature line. QR codes contain only a version marker and student number; the Google Sheet remains the source of truth for the name and program.
 
 ## Local validation
 

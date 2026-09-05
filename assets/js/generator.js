@@ -140,8 +140,8 @@ function generateCards() {
     elements.idGrid.appendChild(card);
     new QRCode(card.querySelector(".id-qr"), {
       text: buildQrPayload(student),
-      width: 180,
-      height: 180,
+      width: 256,
+      height: 256,
       colorDark: "#183044",
       colorLight: "#ffffff",
       correctLevel: QRCode.CorrectLevel.H,
@@ -161,19 +161,29 @@ function createCard(student, picture) {
   card.innerHTML = `
     <header class="id-header">
       <img src="assets/img/psu-logo.png" alt="">
-      <div><strong>PALAWAN STATE UNIVERSITY</strong><small>BALABAC CAMPUS · USG</small></div>
+      <div><strong>PALAWAN STATE UNIVERSITY</strong><small>BALABAC CAMPUS · USG</small><span>STUDENT ATTENDANCE ID</span></div>
       <img src="assets/img/usg-logo.png" alt="">
     </header>
-    <div class="id-photo">${picture ? `<img src="${picture}" alt="2×2 photo of ${escapeHtml(student.name)}">` : "2×2 ID<br>PHOTO"}</div>
+    <div class="id-media-row">
+      <div class="id-media-card">
+        <div class="id-photo">${picture ? `<img src="${picture}" alt="2×2 photo of ${escapeHtml(student.name)}">` : "2×2 ID<br>PHOTO"}</div>
+        <span>STUDENT PHOTO</span>
+      </div>
+      <div class="id-media-card">
+        <div class="id-qr" aria-label="Attendance QR code"></div>
+        <span>ATTENDANCE QR</span>
+      </div>
+    </div>
     <div class="id-details">
       <h3>${escapeHtml(student.name)}</h3>
       <p class="student-number">${escapeHtml(student.studentNumber)}</p>
       <p class="program-name">${escapeHtml(programLabel(student.program))}</p>
     </div>
-    <div class="id-bottom">
-      <p><strong>USG ATTENDANCE</strong>Present to the assigned checker.</p>
-      <div class="id-qr" aria-label="Attendance QR code"></div>
+    <div class="id-signature" aria-label="Blank for student's signature">
+      <span></span>
+      <small>STUDENT'S SIGNATURE</small>
     </div>
+    <p class="id-attendance"><strong>USG ATTENDANCE</strong><span>Present to the assigned checker.</span></p>
   `;
   return card;
 }
@@ -194,6 +204,6 @@ async function downloadFirstCard() {
     setStatus(elements.status, error.message, "error");
   } finally {
     elements.download.disabled = false;
-    elements.download.textContent = "Download first ID as PNG";
+    elements.download.textContent = "Download first A6 ID as PNG";
   }
 }
