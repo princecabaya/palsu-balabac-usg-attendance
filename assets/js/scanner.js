@@ -213,7 +213,13 @@ async function recordAttendance({ studentNumber, qrPayload = "" }) {
 }
 
 function showAttendanceReport(result) {
-  const history = Array.isArray(result.history) ? result.history : [];
+  if (!Array.isArray(result.history)) {
+    currentReport = null;
+    elements.report.hidden = true;
+    setStatus(elements.scanStatus, "Attendance was recorded, but student history requires the organizer to deploy the updated Apps Script backend.", "info");
+    return;
+  }
+  const history = result.history;
   currentReport = {
     student: result.student,
     history,
