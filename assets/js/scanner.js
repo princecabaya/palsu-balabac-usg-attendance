@@ -13,6 +13,8 @@ const elements = {
   connectionPill: document.querySelector("#connection-pill"),
   changeCode: document.querySelector("#change-code"),
   scanPanel: document.querySelector("#scan-panel"),
+  attendanceModeHelp: document.querySelector("#attendance-mode-help"),
+  attendanceModeButtons: [...document.querySelectorAll("[data-attendance-mode]")],
   startCamera: document.querySelector("#start-camera"),
   stopCamera: document.querySelector("#stop-camera"),
   qrFile: document.querySelector("#qr-file"),
@@ -40,15 +42,23 @@ let session = getScannerSession();
 let scanner = null;
 let cameraRunning = false;
 let processing = false;
-let lastValue = "";
-let lastHandledAt = 0;
+let attendanceMode = "timeIn";
+let historyRequestVersion = 0;
+let resultDisplayVersion = 0;
+let backendCapabilitiesPromise = null;
+const recentSuccessfulScans = new Map();
+const CLIENT_DUPLICATE_GAP_MS = 30 * 1000;
 let currentReport = null;
 
 elements.controlCode.addEventListener("input", () => {
   elements.controlCode.value = formatControlCode(elements.controlCode.value);
 });
 
-if (session) unlockWithSession(session);
+elements.attendanceModeButtons.forEach((button) => {
+  button.addEventListener("click", () => setAttendanceMode(button.dataset.attendanceMode));
+});
+
+if (session) restoreSession(session);
 else showLocked();
 
 elements.unlockForm.addEventListener("submit", async (event) => {
@@ -62,10 +72,14 @@ elements.unlockForm.addEventListener("submit", async (event) => {
   button.disabled = true;
   button.textContent = "Checking…";
   try {
-    session = await scannerLogin(elements.controlCode.value);
+    const activeSession = await scannerLogin(elements.controlCode.value);
+    await ensureBackendCapabilities();
+    session = activeSession;
     elements.controlCode.value = "";
     unlockWithSession(session);
   } catch (error) {
+    clearScannerSession();
+    session = null;
     setStatus(elements.unlockStatus, error.message, "error");
   } finally {
     button.disabled = false;
@@ -92,7 +106,7 @@ elements.qrFile.addEventListener("change", async () => {
   clearStatus(elements.scanStatus);
   try {
     if (!window.Html5Qrcode) throw new Error("The QR scanner library did not load. Check the internet connection and refresh the page.");
-    if (!scanner) scanner = new Html5Qrcode("qr-reader", { verbose: false });
+    if (!scanner) scanner = createQrScanner();
     if (cameraRunning) await stopCamera();
     const decoded = await scanner.scanFile(file, true);
     await handleDecodedText(decoded);
@@ -120,6 +134,35 @@ function showLocked() {
   elements.connectionPill.innerHTML = "<i></i> Locked";
 }
 
+async function restoreSession(activeSession) {
+  showLocked();
+  try {
+    await ensureBackendCapabilities();
+    if (session === activeSession) unlockWithSession(activeSession);
+  } catch (error) {
+    clearScannerSession();
+    session = null;
+    setStatus(elements.unlockStatus, error.message, "error");
+  }
+}
+
+async function ensureBackendCapabilities() {
+  if (!backendCapabilitiesPromise) {
+    backendCapabilitiesPromise = jsonp("health", {}, 10000).then((health) => {
+      if (health.apiVersion < 2 || !health.capabilities?.attendanceModes || !health.capabilities?.separateStudentHistory) {
+        const error = new Error("The Google Sheet backend must be updated before scanning. Ask the organizer to replace Code.gs and redeploy the Apps Script web app.");
+        error.code = "BACKEND_UPDATE_REQUIRED";
+        throw error;
+      }
+      return health.capabilities;
+    }).catch((error) => {
+      backendCapabilitiesPromise = null;
+      throw error;
+    });
+  }
+  return backendCapabilitiesPromise;
+}
+
 function unlockWithSession(activeSession) {
   elements.unlockPanel.hidden = true;
   elements.eventStrip.hidden = false;
@@ -144,10 +187,24 @@ async function startCamera() {
   elements.startCamera.disabled = true;
   elements.startCamera.textContent = "Opening camera…";
   try {
-    scanner = scanner || new Html5Qrcode("qr-reader", { verbose: false });
+    await ensureBackendCapabilities();
+    scanner = scanner || createQrScanner();
     await scanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: (width, height) => ({ width: Math.min(width, height) * 0.72, height: Math.min(width, height) * 0.72 }), aspectRatio: 1 },
+      { facingMode: { ideal: "environment" } },
+      {
+        fps: 15,
+        qrbox: (width, height) => {
+          const size = Math.floor(Math.min(width, height) * 0.8);
+          return { width: size, height: size };
+        },
+        disableFlip: true,
+        videoConstraints: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          focusMode: { ideal: "continuous" },
+        },
+      },
       handleDecodedText,
       () => {},
     );
@@ -162,6 +219,17 @@ async function startCamera() {
   }
 }
 
+function createQrScanner() {
+  const config = {
+    verbose: false,
+    experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+  };
+  if (window.Html5QrcodeSupportedFormats?.QR_CODE !== undefined) {
+    config.formatsToSupport = [window.Html5QrcodeSupportedFormats.QR_CODE];
+  }
+  return new window.Html5Qrcode("qr-reader", config);
+}
+
 async function stopCamera() {
   if (!scanner || !cameraRunning) return;
   try { await scanner.stop(); } catch { /* Camera may already be stopped. */ }
@@ -171,10 +239,7 @@ async function stopCamera() {
 }
 
 async function handleDecodedText(rawValue) {
-  const now = Date.now();
-  if (processing || (rawValue === lastValue && now - lastHandledAt < 4000)) return;
-  lastValue = rawValue;
-  lastHandledAt = now;
+  if (processing) return;
   try {
     const parsed = parseQrPayload(rawValue);
     await recordAttendance({ studentNumber: parsed.studentNumber, qrPayload: rawValue });
@@ -184,20 +249,39 @@ async function handleDecodedText(rawValue) {
 }
 
 async function recordAttendance({ studentNumber, qrPayload = "" }) {
-  if (!session) return;
+  if (!session || processing) return;
+  const normalizedStudentNumber = String(studentNumber || "").trim().toUpperCase();
+  const requestedMode = attendanceMode;
+  const recentKey = `${normalizedStudentNumber}|${requestedMode}`;
+  const recentTimestamp = recentSuccessfulScans.get(recentKey) || 0;
+  if (Date.now() - recentTimestamp < CLIENT_DUPLICATE_GAP_MS) {
+    setStatus(elements.scanStatus, `${modeLabel(requestedMode)} for ${normalizedStudentNumber} was just recorded. Duplicate scan ignored.${requestedMode === "timeIn" ? " Choose Time Out only when the student leaves." : ""}`, "info");
+    return;
+  }
+
   processing = true;
-  clearStatus(elements.scanStatus);
+  setModeButtonsDisabled(true);
+  setStatus(elements.scanStatus, `QR detected — recording ${modeLabel(requestedMode)}…`, "info");
   elements.result.hidden = true;
+  elements.report.hidden = true;
+  currentReport = null;
+  const requestVersion = ++historyRequestVersion;
   try {
     const result = await jsonp("scan", {
       token: session.token,
-      studentNumber,
+      studentNumber: normalizedStudentNumber,
       qrPayload,
+      mode: requestedMode,
       requestId: makeRequestId(),
     });
+    if (!result.modeApplied || result.attendanceMode !== requestedMode) {
+      throw new Error("The attendance server did not confirm the selected Time In/Time Out mode. Refresh the scanner and try again.");
+    }
+    recentSuccessfulScans.set(recentKey, Date.now());
     showResult(result);
-    showAttendanceReport(result);
     confirmationTone();
+    setStatus(elements.scanStatus, `${result.attendanceAction} saved. Ready for the next student while attendance history loads.`, "success");
+    loadAttendanceHistory(result.student, requestVersion);
   } catch (error) {
     if (error.code === "SESSION_EXPIRED" || error.code === "EVENT_ENDED") {
       clearScannerSession();
@@ -209,6 +293,22 @@ async function recordAttendance({ studentNumber, qrPayload = "" }) {
     }
   } finally {
     processing = false;
+    setModeButtonsDisabled(false);
+  }
+}
+
+async function loadAttendanceHistory(student, requestVersion) {
+  try {
+    const result = await jsonp("studentHistory", {
+      token: session?.token,
+      studentNumber: student.studentNumber,
+    });
+    if (requestVersion !== historyRequestVersion) return;
+    showAttendanceReport({ student: result.student || student, history: result.history });
+    clearStatus(elements.scanStatus);
+  } catch (error) {
+    if (requestVersion !== historyRequestVersion) return;
+    setStatus(elements.scanStatus, `Attendance was saved, but the history report could not be loaded: ${error.message}`, "info");
   }
 }
 
@@ -314,16 +414,20 @@ function safeFilename(value) {
 }
 
 function showResult(result) {
+  const displayVersion = ++resultDisplayVersion;
   elements.result.hidden = false;
   elements.resultAction.textContent = result.attendanceAction;
   elements.resultName.textContent = result.student.name;
   elements.resultNumber.textContent = result.student.studentNumber;
   elements.resultProgram.textContent = result.student.program;
   elements.resultTime.textContent = formatDateTime(result.timestamp);
-  window.setTimeout(() => { elements.result.hidden = true; }, 6500);
+  window.setTimeout(() => {
+    if (displayVersion === resultDisplayVersion) elements.result.hidden = true;
+  }, 6500);
 }
 
 function confirmationTone() {
+  if (navigator.vibrate) navigator.vibrate(90);
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const context = new AudioContext();
@@ -337,6 +441,26 @@ function confirmationTone() {
     oscillator.start();
     oscillator.stop(context.currentTime + 0.18);
   } catch { /* Sound is optional. */ }
+}
+
+function setAttendanceMode(mode) {
+  if (mode !== "timeIn" && mode !== "timeOut") return;
+  attendanceMode = mode;
+  elements.attendanceModeButtons.forEach((button) => {
+    const active = button.dataset.attendanceMode === mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  elements.attendanceModeHelp.textContent = `Active mode: ${modeLabel(mode)}`;
+  clearStatus(elements.scanStatus);
+}
+
+function setModeButtonsDisabled(disabled) {
+  elements.attendanceModeButtons.forEach((button) => { button.disabled = disabled; });
+}
+
+function modeLabel(mode) {
+  return mode === "timeOut" ? "Time Out" : "Time In";
 }
 
 function formatControlCode(value) {

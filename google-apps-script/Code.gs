@@ -14,6 +14,7 @@ const SUMMARY_FIRST_EVENT_ROW = 9;
 const ADMIN_SESSION_SECONDS = 60 * 60;
 const SCANNER_SESSION_SECONDS = 6 * 60 * 60;
 const MIN_SCAN_GAP_SECONDS = 30;
+const API_VERSION = 2;
 const CONTROL_HEADERS = [
   "Event No.", "Event Name", "Venue", "Event Date", "Start Time",
   "Expires At (ms)", "Event Sheet", "Code Hash", "Code Version",
@@ -90,6 +91,7 @@ function doGet(e) {
       case "rotateCode": result = rotateCodeAction_(parameters); break;
       case "endEvent": result = endEventAction_(parameters); break;
       case "scan": result = scanAction_(parameters); break;
+      case "studentHistory": result = studentHistoryAction_(parameters); break;
       default: throw apiError_("UNKNOWN_ACTION", "Unknown attendance action.");
     }
     return jsonp_(callback, Object.assign({ ok: true }, result || {}));
@@ -107,6 +109,11 @@ function health_() {
   const properties = PropertiesService.getScriptProperties();
   return {
     app: APP_NAME,
+    apiVersion: API_VERSION,
+    capabilities: {
+      attendanceModes: true,
+      separateStudentHistory: true
+    },
     configured: Boolean(properties.getProperty("SPREADSHEET_ID") && properties.getProperty("ADMIN_PASSWORD_HASH")),
     serverTime: new Date().toISOString()
   };
@@ -281,6 +288,10 @@ function endEventAction_(parameters) {
 
 function scanAction_(parameters) {
   const session = requireScannerSession_(parameters.token);
+  const attendanceMode = String(parameters.mode || "");
+  if (attendanceMode !== "timeIn" && attendanceMode !== "timeOut") {
+    throw apiError_("BAD_ATTENDANCE_MODE", "Choose Time In or Time Out before scanning.");
+  }
   const requestId = String(parameters.requestId || "").slice(0, 100);
   const requestCacheKey = requestId ? "scanRequest:" + requestId : "";
   const cache = CacheService.getScriptCache();
@@ -311,6 +322,7 @@ function scanAction_(parameters) {
     if (!row) throw apiError_("STUDENT_NOT_FOUND", "This student is not listed on the event attendance sheet.");
 
     const slots = sheet.getRange(row, 6, 1, 4).getValues()[0];
+    const nextSlot = attendanceSlotForMode_(slots, attendanceMode);
     const filledTimes = slots.filter(function(value) { return value instanceof Date; });
     if (filledTimes.length) {
       const lastTime = filledTimes[filledTimes.length - 1];
@@ -319,32 +331,68 @@ function scanAction_(parameters) {
       }
     }
 
-    const nextIndex = slots.findIndex(function(value) { return value === "" || value === null; });
-    if (nextIndex === -1) throw apiError_("ATTENDANCE_COMPLETE", "All four attendance scans for this student are already complete.");
-
     const now = new Date();
     if (!sheet.getRange(row, 5).getValue()) sheet.getRange(row, 5).setValue(now).setNumberFormat("yyyy-mm-dd");
-    sheet.getRange(row, 6 + nextIndex).setValue(now).setNumberFormat("hh:mm:ss AM/PM");
-    updateSummaryCounts_(record);
+    sheet.getRange(row, 6 + nextSlot.index).setValue(now).setNumberFormat("hh:mm:ss AM/PM");
+    if (nextSlot.index === 0) updateSummaryCounts_(record);
     SpreadsheetApp.flush();
 
-    const labels = ["First Time In", "First Time Out", "Second Time In", "Second Time Out"];
     const response = {
-      attendanceAction: labels[nextIndex],
+      attendanceAction: nextSlot.label,
+      attendanceMode: attendanceMode,
+      modeApplied: true,
       timestamp: now.toISOString(),
       student: {
         name: student.displayName,
         studentNumber: student.studentNumber,
         program: student.program
       },
-      event: publicEvent_(record),
-      history: getStudentAttendanceHistory_(student.studentNumber)
+      event: publicEvent_(record)
     };
     if (requestCacheKey) cache.put(requestCacheKey, JSON.stringify(response), 300);
     return response;
   } finally {
     lock.releaseLock();
   }
+}
+
+function attendanceSlotForMode_(slots, attendanceMode) {
+  const values = slots || [];
+  const filled = values.map(function(value) { return value !== "" && value !== null && value !== undefined; });
+
+  if (attendanceMode === "timeIn") {
+    if (!filled[0]) return { index: 0, label: "First Time In" };
+    if (!filled[1]) throw apiError_("ALREADY_TIMED_IN", "This student is already timed in. Choose Time Out before scanning again.");
+    if (!filled[2]) return { index: 2, label: "Second Time In" };
+    if (!filled[3]) throw apiError_("ALREADY_TIMED_IN", "This student is already timed in. Choose Time Out before scanning again.");
+    throw apiError_("ATTENDANCE_COMPLETE", "All attendance entries for this student are already complete.");
+  }
+
+  if (attendanceMode === "timeOut") {
+    if (!filled[0]) throw apiError_("NOT_TIMED_IN", "This student has no open Time In. Choose Time In first.");
+    if (!filled[1]) return { index: 1, label: "First Time Out" };
+    if (!filled[2]) throw apiError_("NOT_TIMED_IN", "This student has no open Time In. Choose Time In first.");
+    if (!filled[3]) return { index: 3, label: "Second Time Out" };
+    throw apiError_("ATTENDANCE_COMPLETE", "All attendance entries for this student are already complete.");
+  }
+
+  throw apiError_("BAD_ATTENDANCE_MODE", "Choose Time In or Time Out before scanning.");
+}
+
+function studentHistoryAction_(parameters) {
+  requireScannerSession_(parameters.token);
+  const studentNumber = normalizeStudentNumber_(parameters.studentNumber || "");
+  if (!studentNumber) throw apiError_("MISSING_STUDENT_NUMBER", "Enter a student number.");
+  const student = getStudents_().find(function(item) { return item.studentNumber === studentNumber; });
+  if (!student) throw apiError_("STUDENT_NOT_FOUND", "This student number is not in the USG Attendance roster.");
+  return {
+    student: {
+      name: student.displayName,
+      studentNumber: student.studentNumber,
+      program: student.program
+    },
+    history: getStudentAttendanceHistory_(student.studentNumber)
+  };
 }
 
 function getStudentAttendanceHistory_(studentNumber) {

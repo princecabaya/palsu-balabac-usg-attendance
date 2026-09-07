@@ -149,9 +149,9 @@ function generateCards() {
       text: buildQrPayload(student),
       width: 256,
       height: 256,
-      colorDark: "#183044",
+      colorDark: "#000000",
       colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H,
+      correctLevel: QRCode.CorrectLevel.M,
     });
     card.dataset.cardIndex = index;
     card.dataset.studentNumber = student.studentNumber;

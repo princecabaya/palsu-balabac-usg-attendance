@@ -73,3 +73,45 @@ test("attendance duration totals only completed time-in/time-out pairs", () => {
   assert.equal(context.attendanceDurationSeconds_([scans[0], "", scans[2], ""]), 0);
   assert.equal(context.formatDurationSeconds_(0), "");
 });
+
+test("explicit Time In selects only a valid time-in slot", () => {
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(context.attendanceSlotForMode_(["", "", "", ""], "timeIn"))),
+    { index: 0, label: "First Time In" },
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(context.attendanceSlotForMode_([new Date(), new Date(), "", ""], "timeIn"))),
+    { index: 2, label: "Second Time In" },
+  );
+  assert.throws(
+    () => context.attendanceSlotForMode_([new Date(), "", "", ""], "timeIn"),
+    (error) => error.code === "ALREADY_TIMED_IN",
+  );
+});
+
+test("explicit Time Out requires an unmatched time-in slot", () => {
+  assert.throws(
+    () => context.attendanceSlotForMode_(["", "", "", ""], "timeOut"),
+    (error) => error.code === "NOT_TIMED_IN",
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(context.attendanceSlotForMode_([new Date(), "", "", ""], "timeOut"))),
+    { index: 1, label: "First Time Out" },
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(context.attendanceSlotForMode_([new Date(), new Date(), new Date(), ""], "timeOut"))),
+    { index: 3, label: "Second Time Out" },
+  );
+});
+
+test("completed attendance and missing mode cannot create duplicate entries", () => {
+  const complete = [new Date(), new Date(), new Date(), new Date()];
+  assert.throws(
+    () => context.attendanceSlotForMode_(complete, "timeIn"),
+    (error) => error.code === "ATTENDANCE_COMPLETE",
+  );
+  assert.throws(
+    () => context.attendanceSlotForMode_(["", "", "", ""], ""),
+    (error) => error.code === "BAD_ATTENDANCE_MODE",
+  );
+});

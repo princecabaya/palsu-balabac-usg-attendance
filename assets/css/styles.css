@@ -158,6 +158,15 @@ input::placeholder { color: #93a1ab; }
 .button--danger { color: white; background: var(--danger); }
 
 .scan-panel { margin-top: 1.15rem; }
+.attendance-mode { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.85rem; padding: 0.85rem; background: #fff7f1; border: 1px solid #f2c39f; border-radius: 15px; }
+.attendance-mode > div:first-child { display: grid; gap: 0.12rem; }
+.attendance-mode strong { color: var(--ink); font-size: 0.9rem; }
+.attendance-mode small { color: var(--orange-dark); font-size: 0.74rem; font-weight: 800; }
+.attendance-mode__buttons { display: grid; grid-template-columns: repeat(2, minmax(112px, 1fr)); gap: 0.45rem; }
+.attendance-mode__button { min-height: 48px; padding: 0.65rem 1rem; color: var(--muted); background: white; border: 1px solid var(--line); border-radius: 11px; cursor: pointer; font: inherit; font-weight: 850; }
+.attendance-mode__button:hover { border-color: #90a5b3; }
+.attendance-mode__button.is-active { color: white; background: var(--orange); border-color: var(--orange); box-shadow: 0 7px 16px rgba(201, 78, 22, 0.2); }
+.attendance-mode__button[data-attendance-mode="timeOut"].is-active { background: var(--blue); border-color: var(--blue); box-shadow: 0 7px 16px rgba(19, 126, 178, 0.2); }
 .qr-reader { min-height: 340px; overflow: hidden; display: grid; place-items: center; background: #0e1d29; border-radius: 18px; }
 .qr-reader:empty::before { content: "Camera preview"; color: #9eabb4; font-size: 0.9rem; }
 #qr-reader video { object-fit: cover !important; border-radius: 16px; }
@@ -363,6 +372,8 @@ input::placeholder { color: #93a1ab; }
   .unlock-panel, .login-card, .setup-card { grid-template-columns: 1fr; }
   .inline-form { display: grid; }
   .qr-reader { min-height: 300px; }
+  .attendance-mode { display: grid; }
+  .attendance-mode__buttons { width: 100%; grid-template-columns: repeat(2, 1fr); }
   .scanner-aside { display: block; }
   .scanner-aside .aside-art { height: 170px; }
   .scanner-aside .steps-list { display: grid; }

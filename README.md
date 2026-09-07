@@ -4,7 +4,7 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 
 ## Included
 
-- Live rear-camera QR scanner plus saved-image and manual student-number fallbacks
+- Faster QR-only rear-camera scanner plus saved-image and manual student-number fallbacks
 - Navigation-free `scanner.html` for authorized student representatives
 - Organizer-issued eight-character control codes with expiry, rotation, and event ending
 - Separate organizer Control Dashboard
@@ -13,8 +13,9 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 - Batch ZIP download with one high-resolution PNG per generated student ID
 - Four true-size A6 IDs arranged on every A4 print page
 - BEEd, BSE, and BSA program support
-- Automatic first time in, first time out, second time in, and second time out
-- Duplicate-scan protection for 30 seconds
+- Explicit Time In and Time Out buttons for every camera, image, or manual scan
+- Strict attendance sequencing: Time Out requires an open Time In, and duplicate Time In/Out entries are rejected
+- Duplicate-scan protection in both the browser and Apps Script backend
 - Live summary totals by program in the existing Attendance Summary sheet
 - Per-student event history with printable/PDF and CSV time-in/time-out reports after each successful scan
 
@@ -52,7 +53,7 @@ apiUrl: "https://script.google.com/macros/s/DEPLOYMENT_ID/exec",
 
 You may also paste the URL into the Control Dashboard for device-only setup. The dashboard copies the navigation-free `scanner.html` link. The control code is never included in that link and is cleared from the checker page after sign-in.
 
-When updating an existing Apps Script installation, replace `Code.gs`, save, then open **Deploy → Manage deployments → Edit → New version → Deploy**. Updating the existing deployment keeps the configured `/exec` URL.
+When updating an existing Apps Script installation, replace `Code.gs`, save, then open **Deploy → Manage deployments → Edit → New version → Deploy**. Updating the existing deployment keeps the configured `/exec` URL. The scanner checks for this backend version before enabling attendance, which prevents the new Time In/Time Out controls from writing through an older automatic-slot backend.
 
 ## 3. Publish with GitHub Pages
 
@@ -67,15 +68,15 @@ The included workflow deploys every push to `main`.
 
 1. The organizer opens `dashboard.html`, signs in, and creates an event.
 2. The dashboard displays a new control code once. The organizer separately gives the code and the copied scanner-only link to assigned checkers.
-3. A checker opens `scanner.html`, enters the code, starts the rear camera, and scans student IDs. The page has no links to organizer tools and does not retain the entered code.
-4. The server verifies the student number against the protected roster and fills the next available time slot.
-5. The scanner shows that student’s attended events and all recorded time-in/time-out slots. The report can be printed, saved as PDF, or downloaded as CSV.
+3. A checker opens `scanner.html`, enters the code, chooses **Time In** or **Time Out**, starts the rear camera, and scans student IDs. The selected mode remains active for the next students until the checker changes it. The page has no links to organizer tools and does not retain the entered code.
+4. The server verifies the student number against the protected roster and writes only the selected attendance type. It rejects duplicate Time In, duplicate Time Out, and Time Out without a preceding Time In.
+5. The scanner confirms the write immediately, becomes ready for the next student, and loads that student’s attendance history separately. The report can be printed, saved as PDF, or downloaded as CSV.
 6. The organizer refreshes the dashboard to see BEEd, BSE, BSA, and total attendance.
 7. The organizer ends the event when attendance collection is complete.
 
 ## QR ID printing
 
-Open `generator.html`, sign in with the organizer password, and load the roster. Select one student to apply a 2×2-style photo, or select a group to create blank photo-space IDs. **Download all IDs as ZIP** exports every generated ID as a separate high-resolution PNG. **Print 4 IDs per A4** arranges four true-size 105 × 148 mm A6 cards on each borderless A4 portrait page. In the print dialog, use 100% scale, no margins, and enable background graphics. QR codes contain only a version marker and student number; the Google Sheet remains the source of truth for the name and program.
+Open `generator.html`, sign in with the organizer password, and load the roster. Select one student to apply a 2×2-style photo, or select a group to create blank photo-space IDs. **Download all IDs as ZIP** exports every generated ID as a separate high-resolution PNG. **Print 4 IDs per A4** arranges four true-size 105 × 148 mm A6 cards on each borderless A4 portrait page. In the print dialog, use 100% scale, no margins, and enable background graphics. QR codes use pure black modules with medium error correction for faster camera recognition and contain only a version marker and student number; the Google Sheet remains the source of truth for the name and program.
 
 ## Local validation
 

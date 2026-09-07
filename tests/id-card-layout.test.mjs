@@ -28,8 +28,13 @@ test("photo and QR are equal-size side-by-side panels", () => {
 test("student ID includes a blank signature line", () => {
   assert.match(generator, /class="id-signature"/);
   assert.match(generator, /STUDENT'S SIGNATURE/);
-  assert.match(page, /styles\.css\?v=20260907\.1/);
-  assert.match(page, /generator\.js\?v=20260907\.1/);
+  assert.match(page, /styles\.css\?v=20260907\.2/);
+  assert.match(page, /generator\.js\?v=20260907\.2/);
+});
+
+test("generated QR codes use a high-contrast, scanner-friendly setting", () => {
+  assert.match(generator, /colorDark:\s*"#000000"/);
+  assert.match(generator, /correctLevel:\s*QRCode\.CorrectLevel\.M/);
 });
 
 test("all generated IDs can be downloaded in one ZIP archive", () => {

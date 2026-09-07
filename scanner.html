@@ -8,10 +8,10 @@
   <meta name="description" content="Dedicated QR attendance scanner for authorized PSU Balabac USG event checkers.">
   <title>Authorized QR Scanner | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260905.1">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260907.2">
   <script src="assets/js/config.js?v=20260905.1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
-  <script type="module" src="assets/js/scanner.js?v=20260905.2"></script>
+  <script type="module" src="assets/js/scanner.js?v=20260907.2"></script>
 </head>
 <body class="scanner-only-page">
   <header class="scanner-only-header">
@@ -62,6 +62,16 @@
       </section>
 
       <section class="scan-panel" id="scan-panel" hidden>
+        <div class="attendance-mode" role="group" aria-label="Attendance action">
+          <div>
+            <strong>Record each scan as</strong>
+            <small id="attendance-mode-help">Active mode: Time In</small>
+          </div>
+          <div class="attendance-mode__buttons">
+            <button class="attendance-mode__button is-active" id="mode-time-in" data-attendance-mode="timeIn" type="button" aria-pressed="true">Time In</button>
+            <button class="attendance-mode__button" id="mode-time-out" data-attendance-mode="timeOut" type="button" aria-pressed="false">Time Out</button>
+          </div>
+        </div>
         <div id="qr-reader" class="qr-reader" aria-label="Camera preview"></div>
         <div class="scanner-actions">
           <button class="button button--primary" id="start-camera" type="button">Start camera</button>
@@ -74,7 +84,7 @@
           <form id="manual-form" class="inline-form inline-form--compact">
             <label class="sr-only" for="student-number">Student number</label>
             <input id="student-number" autocomplete="off" placeholder="2026-10-0001BL" required>
-            <button class="button button--secondary" type="submit">Record</button>
+            <button class="button button--secondary" type="submit">Record selected action</button>
           </form>
         </details>
       </section>
