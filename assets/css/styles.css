@@ -258,6 +258,7 @@ input::placeholder { color: #93a1ab; }
 .empty-state p { max-width: 420px; }
 .empty-state__mark { display: grid; place-items: center; width: 78px; height: 78px; margin-bottom: 1rem; color: white; background: linear-gradient(135deg, var(--orange), var(--blue)); border: 8px solid white; outline: 1px solid var(--line); border-radius: 23px; font-weight: 950; }
 .id-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(397px, 1fr)); gap: 18px; align-items: start; }
+.id-sheet { display: contents; }
 
 .student-id {
   position: relative;
@@ -391,16 +392,18 @@ input::placeholder { color: #93a1ab; }
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
 
-@page id-card { size: 105mm 148mm; margin: 0; }
+@page id-sheet { size: A4 portrait; margin: 0; }
 @page attendance-report { size: A4 landscape; margin: 8mm; }
 
 @media print {
   :root, body { background: white; }
   .no-print, .site-header, .site-footer, .workspace-panel, .output-heading, .empty-state { display: none !important; }
   .page, .page--wide, .generator-page, .card-output { display: block; width: auto; margin: 0; padding: 0; border: 0; box-shadow: none; background: white; }
-  .id-grid { display: block; }
-  .student-id { page: id-card; break-inside: avoid; break-after: page; width: 105mm; height: 148mm; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
-  .student-id:last-child { break-after: auto; }
+  body.generator-body { width: 210mm; margin: 0; }
+  .id-grid { display: block; width: 210mm; }
+  .id-sheet { display: grid; grid-template-columns: repeat(2, 105mm); grid-template-rows: repeat(2, 148mm); width: 210mm; height: 297mm; align-content: start; page: id-sheet; break-after: page; }
+  .id-sheet:last-child { break-after: auto; }
+  .student-id { break-inside: avoid; width: 105mm; height: 148mm; margin: 0; box-shadow: none; }
   body.printing-attendance-report .scanner-only-header,
   body.printing-attendance-report .site-header,
   body.printing-attendance-report .site-footer,

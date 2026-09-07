@@ -10,6 +10,8 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 - Separate organizer Control Dashboard
 - Protected QR ID Generator that reads the existing 400-student roster
 - Printable A6 portrait IDs with PSU and USG logos, equal-size photo and QR panels, student details, and a signature line
+- Batch ZIP download with one high-resolution PNG per generated student ID
+- Four true-size A6 IDs arranged on every A4 print page
 - BEEd, BSE, and BSA program support
 - Automatic first time in, first time out, second time in, and second time out
 - Duplicate-scan protection for 30 seconds
@@ -73,7 +75,7 @@ The included workflow deploys every push to `main`.
 
 ## QR ID printing
 
-Open `generator.html`, sign in with the organizer password, and load the roster. Select one student to apply and download a 2×2-style photo card, or select a group to print blank photo-space IDs. Every card is 105 × 148 mm (A6 portrait), with the photo and QR code aligned side by side at the same size and a blank student-signature line. QR codes contain only a version marker and student number; the Google Sheet remains the source of truth for the name and program.
+Open `generator.html`, sign in with the organizer password, and load the roster. Select one student to apply a 2×2-style photo, or select a group to create blank photo-space IDs. **Download all IDs as ZIP** exports every generated ID as a separate high-resolution PNG. **Print 4 IDs per A4** arranges four true-size 105 × 148 mm A6 cards on each borderless A4 portrait page. In the print dialog, use 100% scale, no margins, and enable background graphics. QR codes contain only a version marker and student number; the Google Sheet remains the source of truth for the name and program.
 
 ## Local validation
 
@@ -84,7 +86,7 @@ npm test
 npm run validate
 ```
 
-The site uses pinned browser builds of `html5-qrcode` 2.3.8, `qrcodejs` 1.0.0, and `html2canvas` 1.4.1 from cdnjs.
+The site uses pinned browser builds of `html5-qrcode` 2.3.8, `qrcodejs` 1.0.0, `html2canvas` 1.4.1, and `JSZip` 3.10.1 from cdnjs.
 
 ## Privacy and operations
 

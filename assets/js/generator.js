@@ -15,7 +15,7 @@ const elements = {
   selectionCount: document.querySelector("#selection-count"),
   generate: document.querySelector("#generate-cards"),
   print: document.querySelector("#print-cards"),
-  download: document.querySelector("#download-card"),
+  download: document.querySelector("#download-cards"),
   rosterBody: document.querySelector("#roster-body"),
   status: document.querySelector("#generator-status"),
   idGrid: document.querySelector("#id-grid"),
@@ -66,7 +66,7 @@ elements.photo.addEventListener("change", () => {
 });
 elements.generate.addEventListener("click", generateCards);
 elements.print.addEventListener("click", () => window.print());
-elements.download.addEventListener("click", downloadFirstCard);
+elements.download.addEventListener("click", downloadAllCards);
 
 if (adminSession) openGenerator();
 
@@ -135,9 +135,16 @@ function generateCards() {
   }
 
   elements.idGrid.innerHTML = "";
+  let currentSheet;
   selectedStudents.forEach((student, index) => {
+    if (index % 4 === 0) {
+      currentSheet = document.createElement("section");
+      currentSheet.className = "id-sheet";
+      currentSheet.setAttribute("aria-label", `A4 ID sheet ${Math.floor(index / 4) + 1}`);
+      elements.idGrid.appendChild(currentSheet);
+    }
     const card = createCard(student, selectedStudents.length === 1 ? photoUrl : "");
-    elements.idGrid.appendChild(card);
+    currentSheet.appendChild(card);
     new QRCode(card.querySelector(".id-qr"), {
       text: buildQrPayload(student),
       width: 256,
@@ -147,10 +154,12 @@ function generateCards() {
       correctLevel: QRCode.CorrectLevel.H,
     });
     card.dataset.cardIndex = index;
+    card.dataset.studentNumber = student.studentNumber;
   });
   elements.empty.hidden = true;
   elements.print.disabled = false;
   elements.download.hidden = false;
+  setDownloadLabel(selectedStudents.length);
   elements.idGrid.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -188,22 +197,59 @@ function createCard(student, picture) {
   return card;
 }
 
-async function downloadFirstCard() {
-  const card = elements.idGrid.querySelector(".student-id");
-  if (!card) return;
+async function downloadAllCards() {
+  const cards = [...elements.idGrid.querySelectorAll(".student-id")];
+  if (!cards.length) return;
   elements.download.disabled = true;
-  elements.download.textContent = "Preparing PNG…";
+  clearStatus(elements.status);
   try {
-    if (!window.html2canvas) throw new Error("The image export library did not load. Use Print selected instead.");
-    const canvas = await html2canvas(card, { scale: 4, backgroundColor: "#ffffff", useCORS: true });
+    if (!window.html2canvas || !window.JSZip) {
+      throw new Error("The ZIP export libraries did not load. Refresh the page and try again, or use Print 4 IDs per A4.");
+    }
+    if (document.fonts?.ready) await document.fonts.ready;
+
+    const zip = new JSZip();
+    for (let index = 0; index < cards.length; index += 1) {
+      const card = cards[index];
+      elements.download.textContent = `Preparing ${index + 1} of ${cards.length}…`;
+      const canvas = await html2canvas(card, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
+      const image = await canvasToBlob(canvas);
+      const studentNumber = safeFilenamePart(card.dataset.studentNumber || `student-${index + 1}`);
+      zip.file(`PSU-USG-A6-ID-${studentNumber}.png`, image);
+    }
+
+    const archive = await zip.generateAsync({ type: "blob" }, ({ percent }) => {
+      elements.download.textContent = `Creating ZIP ${Math.round(percent)}%`;
+    });
+    const url = URL.createObjectURL(archive);
     const link = document.createElement("a");
-    link.download = `PSU-USG-QR-ID-${selected.values().next().value || "student"}.png`;
-    link.href = canvas.toDataURL("image/png");
+    link.download = `PSU-USG-A6-IDs-${new Date().toISOString().slice(0, 10)}.zip`;
+    link.href = url;
     link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setStatus(elements.status, `${cards.length} A6 ID${cards.length === 1 ? "" : "s"} downloaded in one ZIP file.`, "success");
   } catch (error) {
     setStatus(elements.status, error.message, "error");
   } finally {
     elements.download.disabled = false;
-    elements.download.textContent = "Download first A6 ID as PNG";
+    setDownloadLabel(cards.length);
   }
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("An ID image could not be created.")), "image/png");
+  });
+}
+
+function safeFilenamePart(value) {
+  return String(value)
+    .trim()
+    .replace(/[^A-Za-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "student";
+}
+
+function setDownloadLabel(count) {
+  elements.download.textContent = `Download all ${count} ID${count === 1 ? "" : "s"} as ZIP`;
 }
