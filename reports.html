@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f47a31">
+  <meta name="description" content="Search and print student attendance reports for PSU Balabac USG events.">
+  <title>Student Attendance Reports | PSU Balabac USG</title>
+  <link rel="icon" href="assets/img/usg-logo.png">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260908.1">
+  <script src="assets/js/config.js?v=20260905.1"></script>
+  <script type="module" src="assets/js/reports.js?v=20260908.1"></script>
+</head>
+<body class="reports-body">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
+      <span class="brand__seals">
+        <img src="assets/img/psu-logo.png" alt="Palawan State University logo">
+        <img src="assets/img/usg-logo.png" alt="University Student Government logo">
+      </span>
+      <span><strong>USG Attendance</strong><small>PSU Balabac Campus</small></span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html">Scanner</a>
+      <a href="generator.html">ID Generator</a>
+      <a href="dashboard.html">Control</a>
+      <a class="is-active" href="reports.html">Reports</a>
+    </nav>
+  </header>
+
+  <main class="page page--wide reports-page">
+    <section class="section-heading no-print">
+      <div>
+        <p class="eyebrow">USG attendance records</p>
+        <h1>Student activity reports</h1>
+        <p class="lede">Search by student name or student ID to view every recorded activity, time in, time out, and total attendance time.</p>
+      </div>
+      <button class="button button--quiet" id="report-logout" type="button" hidden>Sign out</button>
+    </section>
+
+    <section class="login-card no-print" id="report-login">
+      <div class="number-badge">R</div>
+      <form id="report-login-form">
+        <h2>USG administrator sign-in</h2>
+        <p>Use the same administrator password used for the Control Dashboard.</p>
+        <div class="inline-form">
+          <label class="sr-only" for="report-password">Administrator password</label>
+          <input type="password" id="report-password" autocomplete="current-password" placeholder="Administrator password" required>
+          <button class="button button--primary" type="submit">Open reports</button>
+        </div>
+        <div class="status" id="report-login-status" hidden role="status"></div>
+      </form>
+    </section>
+
+    <section id="report-tools" hidden>
+      <section class="panel report-search-panel no-print" aria-labelledby="student-search-title">
+        <div>
+          <p class="eyebrow">Find a student</p>
+          <h2 id="student-search-title">Search the official roster</h2>
+          <p>Enter at least two letters from the student’s name or any part of the student ID.</p>
+        </div>
+        <form class="report-search-form" id="report-search-form">
+          <label class="sr-only" for="report-student-search">Student name or ID</label>
+          <input type="search" id="report-student-search" autocomplete="off" placeholder="Example: Tenton Ami or 2026-10-0007BL" required>
+          <button class="button button--secondary" type="submit">Search</button>
+        </form>
+        <div class="status" id="report-status" hidden role="status"></div>
+        <div class="student-search-results" id="student-search-results" aria-live="polite"></div>
+      </section>
+
+      <section class="attendance-report" id="student-report" hidden aria-labelledby="student-report-title">
+        <div class="report-brand">
+          <span class="report-brand__seals">
+            <img src="assets/img/psu-logo.png" alt="">
+            <img src="assets/img/usg-logo.png" alt="">
+          </span>
+          <span><strong>PALAWAN STATE UNIVERSITY</strong><small>Balabac Campus · University Student Government</small></span>
+        </div>
+        <div class="report-heading">
+          <div>
+            <p class="eyebrow">Student attendance report</p>
+            <h2 id="student-report-title"><span id="student-report-name">Student name</span></h2>
+            <p id="student-report-meta"></p>
+          </div>
+          <div class="report-actions no-print">
+            <button class="button button--secondary button--small" id="print-student-report" type="button">Print / Save PDF</button>
+            <button class="button button--quiet button--small" id="download-student-report" type="button">Download CSV</button>
+          </div>
+        </div>
+        <div class="report-stat-row">
+          <div class="report-stat"><strong id="student-report-event-count">0</strong><span>activities attended</span></div>
+          <div class="report-stat"><strong id="student-report-total-time">00:00:00</strong><span>total recorded time</span></div>
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead><tr><th>Activity</th><th>Date</th><th>First in</th><th>First out</th><th>Second in</th><th>Second out</th><th>Total</th></tr></thead>
+            <tbody id="student-report-body"></tbody>
+          </table>
+        </div>
+        <p class="report-empty" id="student-report-empty" hidden>No recorded attendance was found for this student.</p>
+        <p class="report-generated">Generated from the USG Attendance Sheet: <time id="student-report-generated-at"></time></p>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer no-print">Palawan State University – Balabac Campus · University Student Government</footer>
+</body>
+</html>

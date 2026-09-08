@@ -37,14 +37,26 @@ export async function sha256(value) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export function jsonp(action, params = {}, timeoutMs = 18000) {
+export async function jsonp(action, params = {}, timeoutMs = 18000) {
+  try {
+    return await jsonpOnce(action, params, timeoutMs);
+  } catch (error) {
+    if (error.code === "NETWORK_ERROR" && navigator.onLine !== false) {
+      await new Promise((resolve) => window.setTimeout(resolve, 450));
+      return jsonpOnce(action, params, timeoutMs);
+    }
+    throw error;
+  }
+}
+
+function jsonpOnce(action, params = {}, timeoutMs = 18000) {
   const apiUrl = getApiUrl();
   if (!apiUrl) return Promise.reject(new Error("The Google Sheet connection has not been configured."));
 
   return new Promise((resolve, reject) => {
     const callback = `__psu_usg_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const script = document.createElement("script");
-    const timer = window.setTimeout(() => finish(new Error("The attendance server did not respond. Check the internet connection and try again.")), timeoutMs);
+    const timer = window.setTimeout(() => finish(connectionError("TIMEOUT")), timeoutMs);
 
     function cleanup() {
       window.clearTimeout(timer);
@@ -60,7 +72,7 @@ export function jsonp(action, params = {}, timeoutMs = 18000) {
     }
 
     window[callback] = (data) => finish(null, data);
-    script.onerror = () => finish(new Error("The attendance server could not be reached."));
+    script.onerror = () => finish(connectionError("NETWORK_ERROR"));
 
     const url = new URL(apiUrl);
     url.searchParams.set("action", action);
@@ -72,6 +84,18 @@ export function jsonp(action, params = {}, timeoutMs = 18000) {
     script.src = url.toString();
     document.head.appendChild(script);
   });
+}
+
+function connectionError(code) {
+  let message;
+  if (navigator.onLine === false) {
+    message = "This device is offline. Reconnect to the internet before recording attendance.";
+  } else if (/SamsungBrowser/i.test(navigator.userAgent)) {
+    message = "The attendance server could not be reached. In Samsung Internet, turn off the Content Blocker for this site or open the scanner in Google Chrome. Also confirm that Apps Script allows Anyone, including signed-out users.";
+  } else {
+    message = "The attendance server could not be reached. Check the internet connection and confirm that Apps Script is deployed as Execute as Me with access for Anyone, including signed-out users.";
+  }
+  return Object.assign(new Error(message), { code });
 }
 
 async function challengeLogin(scope, secret) {

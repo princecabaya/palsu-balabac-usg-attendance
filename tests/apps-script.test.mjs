@@ -115,3 +115,8 @@ test("completed attendance and missing mode cannot create duplicate entries", ()
     (error) => error.code === "BAD_ATTENDANCE_MODE",
   );
 });
+
+test("API version 3 advertises administrator reports", () => {
+  assert.match(source, /const API_VERSION = 3;/);
+  assert.match(source, /adminReports:\s*true/);
+});

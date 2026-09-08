@@ -1,7 +1,7 @@
 /**
  * PSU Balabac USG QR Attendance API
  * Paste this file into Extensions > Apps Script from the USG Attendance Sheet.
- * Deploy as a Web app: Execute as Me; access Anyone (or your Workspace domain).
+ * Deploy as a Web app: Execute as Me; access Anyone, including signed-out users.
  */
 
 const APP_NAME = "PSU Balabac USG Attendance";
@@ -14,7 +14,7 @@ const SUMMARY_FIRST_EVENT_ROW = 9;
 const ADMIN_SESSION_SECONDS = 60 * 60;
 const SCANNER_SESSION_SECONDS = 6 * 60 * 60;
 const MIN_SCAN_GAP_SECONDS = 30;
-const API_VERSION = 2;
+const API_VERSION = 3;
 const CONTROL_HEADERS = [
   "Event No.", "Event Name", "Venue", "Event Date", "Start Time",
   "Expires At (ms)", "Event Sheet", "Code Hash", "Code Version",
@@ -92,6 +92,7 @@ function doGet(e) {
       case "endEvent": result = endEventAction_(parameters); break;
       case "scan": result = scanAction_(parameters); break;
       case "studentHistory": result = studentHistoryAction_(parameters); break;
+      case "studentReport": result = studentReportAction_(parameters); break;
       default: throw apiError_("UNKNOWN_ACTION", "Unknown attendance action.");
     }
     return jsonp_(callback, Object.assign({ ok: true }, result || {}));
@@ -112,7 +113,8 @@ function health_() {
     apiVersion: API_VERSION,
     capabilities: {
       attendanceModes: true,
-      separateStudentHistory: true
+      separateStudentHistory: true,
+      adminReports: true
     },
     configured: Boolean(properties.getProperty("SPREADSHEET_ID") && properties.getProperty("ADMIN_PASSWORD_HASH")),
     serverTime: new Date().toISOString()
@@ -381,7 +383,16 @@ function attendanceSlotForMode_(slots, attendanceMode) {
 
 function studentHistoryAction_(parameters) {
   requireScannerSession_(parameters.token);
-  const studentNumber = normalizeStudentNumber_(parameters.studentNumber || "");
+  return studentAttendanceReport_(parameters.studentNumber);
+}
+
+function studentReportAction_(parameters) {
+  requireAdmin_(parameters.token);
+  return studentAttendanceReport_(parameters.studentNumber);
+}
+
+function studentAttendanceReport_(studentNumberValue) {
+  const studentNumber = normalizeStudentNumber_(studentNumberValue || "");
   if (!studentNumber) throw apiError_("MISSING_STUDENT_NUMBER", "Enter a student number.");
   const student = getStudents_().find(function(item) { return item.studentNumber === studentNumber; });
   if (!student) throw apiError_("STUDENT_NOT_FOUND", "This student number is not in the USG Attendance roster.");

@@ -9,7 +9,7 @@ const scannerSource = fs.readFileSync(new URL("../assets/js/scanner.js", import.
 const backendSource = fs.readFileSync(new URL("../google-apps-script/Code.gs", import.meta.url), "utf8");
 
 test("scanner-only page does not expose organizer navigation", () => {
-  assert.doesNotMatch(scannerPage, /href=["'][^"']*(?:generator|dashboard)\.html/i);
+  assert.doesNotMatch(scannerPage, /href=["'][^"']*(?:generator|dashboard|reports)\.html/i);
   assert.doesNotMatch(scannerPage, /<nav\b/i);
   assert.match(scannerPage, /name="robots" content="noindex, nofollow"/i);
 });
@@ -48,4 +48,15 @@ test("camera scanner is QR-only and attendance history loads separately", () => 
   assert.match(backendSource, /case "studentHistory"/);
   const scanAction = backendSource.slice(backendSource.indexOf("function scanAction_"), backendSource.indexOf("function attendanceSlotForMode_"));
   assert.doesNotMatch(scanAction, /getStudentAttendanceHistory_/);
+});
+
+test("double-tap starts or refocuses the mobile scanner", () => {
+  for (const page of [scannerPage, organizerScannerPage]) {
+    assert.match(page, /Double-tap the camera/);
+  }
+  assert.match(scannerSource, /addEventListener\("pointerup", handlePreviewTap\)/);
+  assert.match(scannerSource, /now - lastPreviewTapAt <= 450/);
+  assert.match(scannerSource, /triggerScannerBoost/);
+  assert.match(scannerSource, /focusMode: "single-shot"/);
+  assert.match(scannerSource, /track\.applyConstraints/);
 });

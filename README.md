@@ -18,6 +18,8 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 - Duplicate-scan protection in both the browser and Apps Script backend
 - Live summary totals by program in the existing Attendance Summary sheet
 - Per-student event history with printable/PDF and CSV time-in/time-out reports after each successful scan
+- Administrator-only Reports tab with roster search by student name or student ID
+- Double-tap camera start/refocus assistance for tablets and phones
 
 ## Sheet compatibility
 
@@ -71,8 +73,20 @@ The included workflow deploys every push to `main`.
 3. A checker opens `scanner.html`, enters the code, chooses **Time In** or **Time Out**, starts the rear camera, and scans student IDs. The selected mode remains active for the next students until the checker changes it. The page has no links to organizer tools and does not retain the entered code.
 4. The server verifies the student number against the protected roster and writes only the selected attendance type. It rejects duplicate Time In, duplicate Time Out, and Time Out without a preceding Time In.
 5. The scanner confirms the write immediately, becomes ready for the next student, and loads that student’s attendance history separately. The report can be printed, saved as PDF, or downloaded as CSV.
-6. The organizer refreshes the dashboard to see BEEd, BSE, BSA, and total attendance.
-7. The organizer ends the event when attendance collection is complete.
+6. If the camera hesitates, double-tap the preview to start it or request a fresh focus cycle on supported devices.
+7. The organizer opens `reports.html`, signs in with the administrator password, and searches a name or student ID to print or download the student’s activity history.
+8. The organizer refreshes the dashboard to see BEEd, BSE, BSA, and total attendance, then ends the event when attendance collection is complete.
+
+## Tablet connection troubleshooting
+
+If a tablet says **“The attendance server could not be reached,”** the page loaded but the browser could not complete the request to Google Apps Script. Check these items on the same tablet:
+
+1. Confirm the tablet has a working internet connection; live attendance cannot be saved offline.
+2. In Apps Script, open **Deploy → Manage deployments → Edit**, select **New version**, set **Execute as: Me**, and allow **Anyone**, including signed-out users, then deploy.
+3. Open the `/exec` deployment URL directly on the tablet. It should return the attendance service response instead of a Google sign-in or permission page.
+4. If Samsung Internet still blocks the request, disable its Content Blocker for the attendance site or open the scanner-only link in Google Chrome.
+
+The web app retries one temporary network failure automatically. It never reports a scan as saved unless Apps Script confirms the Google Sheet write.
 
 ## QR ID printing
 

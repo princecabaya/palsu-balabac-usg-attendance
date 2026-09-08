@@ -7,10 +7,10 @@
   <meta name="description" content="QR attendance scanner for Palawan State University – Balabac Campus University Student Government events.">
   <title>QR Attendance Scanner | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260907.2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260908.1">
   <script src="assets/js/config.js?v=20260905.1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
-  <script type="module" src="assets/js/scanner.js?v=20260907.2"></script>
+  <script type="module" src="assets/js/scanner.js?v=20260908.1"></script>
 </head>
 <body>
   <header class="site-header">
@@ -25,6 +25,7 @@
       <a class="is-active" href="index.html">Scanner</a>
       <a href="generator.html">ID Generator</a>
       <a href="dashboard.html">Control</a>
+      <a href="reports.html">Reports</a>
     </nav>
   </header>
 
@@ -76,6 +77,7 @@
           </div>
         </div>
         <div id="qr-reader" class="qr-reader" aria-label="Camera preview"></div>
+        <p class="camera-gesture-hint"><strong>Double-tap the camera</strong> to start or refocus the QR scanner.</p>
         <div class="scanner-actions">
           <button class="button button--primary" id="start-camera" type="button">Start camera</button>
           <button class="button button--quiet" id="stop-camera" type="button" hidden>Stop camera</button>

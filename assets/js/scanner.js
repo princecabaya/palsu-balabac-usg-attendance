@@ -1,4 +1,4 @@
-import { clearScannerSession, getApiUrl, getScannerSession, jsonp, makeRequestId, normalizeControlCode, scannerLogin } from "./api.js?v=20260905.1";
+import { clearScannerSession, getApiUrl, getScannerSession, jsonp, makeRequestId, normalizeControlCode, scannerLogin } from "./api.js?v=20260908.1";
 import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js?v=20260905.1";
 import { parseQrPayload } from "./qr-payload.js";
 
@@ -13,6 +13,7 @@ const elements = {
   connectionPill: document.querySelector("#connection-pill"),
   changeCode: document.querySelector("#change-code"),
   scanPanel: document.querySelector("#scan-panel"),
+  qrReader: document.querySelector("#qr-reader"),
   attendanceModeHelp: document.querySelector("#attendance-mode-help"),
   attendanceModeButtons: [...document.querySelectorAll("[data-attendance-mode]")],
   startCamera: document.querySelector("#start-camera"),
@@ -41,11 +42,14 @@ const elements = {
 let session = getScannerSession();
 let scanner = null;
 let cameraRunning = false;
+let cameraStarting = false;
 let processing = false;
 let attendanceMode = "timeIn";
 let historyRequestVersion = 0;
 let resultDisplayVersion = 0;
 let backendCapabilitiesPromise = null;
+let lastPreviewTapAt = 0;
+let focusResetTimer = 0;
 const recentSuccessfulScans = new Map();
 const CLIENT_DUPLICATE_GAP_MS = 30 * 1000;
 let currentReport = null;
@@ -57,6 +61,7 @@ elements.controlCode.addEventListener("input", () => {
 elements.attendanceModeButtons.forEach((button) => {
   button.addEventListener("click", () => setAttendanceMode(button.dataset.attendanceMode));
 });
+elements.qrReader.addEventListener("pointerup", handlePreviewTap);
 
 if (session) restoreSession(session);
 else showLocked();
@@ -175,6 +180,7 @@ function unlockWithSession(activeSession) {
 }
 
 async function startCamera() {
+  if (cameraRunning || cameraStarting) return;
   clearStatus(elements.scanStatus);
   if (!window.isSecureContext) {
     setStatus(elements.scanStatus, "Camera access requires HTTPS. Open the published GitHub Pages link, not a downloaded HTML file.", "error");
@@ -186,6 +192,7 @@ async function startCamera() {
   }
   elements.startCamera.disabled = true;
   elements.startCamera.textContent = "Opening camera…";
+  cameraStarting = true;
   try {
     await ensureBackendCapabilities();
     scanner = scanner || createQrScanner();
@@ -214,6 +221,7 @@ async function startCamera() {
   } catch (error) {
     setStatus(elements.scanStatus, friendlyCameraError(error), "error");
   } finally {
+    cameraStarting = false;
     elements.startCamera.disabled = false;
     elements.startCamera.textContent = "Start camera";
   }
@@ -230,8 +238,54 @@ function createQrScanner() {
   return new window.Html5Qrcode("qr-reader", config);
 }
 
+function handlePreviewTap(event) {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+  const now = Date.now();
+  if (now - lastPreviewTapAt <= 450) {
+    lastPreviewTapAt = 0;
+    event.preventDefault();
+    triggerScannerBoost();
+    return;
+  }
+  lastPreviewTapAt = now;
+}
+
+async function triggerScannerBoost() {
+  if (!cameraRunning) {
+    setStatus(elements.scanStatus, "Double tap detected — opening the QR scanner…", "info");
+    await startCamera();
+    return;
+  }
+
+  const video = elements.qrReader.querySelector("video");
+  const track = video?.srcObject?.getVideoTracks?.()[0];
+  try {
+    if (video?.paused) await video.play();
+    const focusModes = track?.getCapabilities?.().focusMode || [];
+    if (track && focusModes.includes("single-shot")) {
+      await track.applyConstraints({ advanced: [{ focusMode: "single-shot" }] });
+      window.clearTimeout(focusResetTimer);
+      focusResetTimer = window.setTimeout(() => {
+        if (focusModes.includes("continuous")) {
+          track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(() => {});
+        }
+      }, 900);
+      setStatus(elements.scanStatus, "Camera refocused — hold the QR code steady inside the frame.", "info");
+    } else if (track && focusModes.includes("continuous")) {
+      await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+      setStatus(elements.scanStatus, "Continuous focus refreshed — hold the QR code inside the frame.", "info");
+    } else {
+      setStatus(elements.scanStatus, "Scanner is active — move the QR code closer and hold it steady inside the frame.", "info");
+    }
+    if (navigator.vibrate) navigator.vibrate(45);
+  } catch {
+    setStatus(elements.scanStatus, "Scanner refreshed — hold the QR code steady inside the frame.", "info");
+  }
+}
+
 async function stopCamera() {
   if (!scanner || !cameraRunning) return;
+  window.clearTimeout(focusResetTimer);
   try { await scanner.stop(); } catch { /* Camera may already be stopped. */ }
   cameraRunning = false;
   elements.startCamera.hidden = false;

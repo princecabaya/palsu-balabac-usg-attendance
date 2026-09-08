@@ -1,4 +1,4 @@
-import { adminLogin, buildScannerLink, clearAdminSession, getAdminSession, getApiUrl, jsonp, setApiUrl } from "./api.js?v=20260905.1";
+import { adminLogin, buildScannerLink, clearAdminSession, getAdminSession, getApiUrl, jsonp, setApiUrl } from "./api.js?v=20260908.1";
 import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js";
 
 const elements = {

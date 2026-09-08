@@ -1,4 +1,4 @@
-import { adminLogin, getAdminSession, jsonp } from "./api.js";
+import { adminLogin, getAdminSession, jsonp } from "./api.js?v=20260908.1";
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
 import { buildQrPayload, normalizeProgram, programLabel } from "./qr-payload.js";
 
