@@ -1,6 +1,7 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
-import { buildQrPayload, normalizeProgram, programLabel } from "./qr-payload.js";
-import { getOwnProfile, getSession, listStudents, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js";
+import { renderStudentIdPair } from "./id-card.js?v=20260915.6";
+import { normalizeProgram } from "./qr-payload.js";
+import { getOwnProfile, getSession, listStudents, privateAssetUrls, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js";
 
 const elements = {
   login: document.querySelector("#generator-login"),
@@ -109,7 +110,7 @@ async function loadRoster() {
     const profiles = await listStudents();
     students = profiles
       .filter((profile) => profile.account_status !== "inactive")
-      .map((profile) => ({
+      .map((profile) => ({ ...profile,
         studentNumber: profile.student_number,
         name: profileDisplayName(profile),
         program: normalizeProgram(profile.program),
@@ -158,7 +159,7 @@ function updateSelection() {
   elements.generate.disabled = count === 0;
 }
 
-function generateCards() {
+async function generateCards() {
   clearStatus(elements.status);
   const selectedStudents = students.filter((student) => selected.has(student.studentNumber));
   if (!selectedStudents.length) return;
@@ -166,72 +167,47 @@ function generateCards() {
     setStatus(elements.status, "A photo can be applied only when one student is selected. The batch will use blank 2×2 photo spaces.", "info");
   }
 
-  elements.idGrid.innerHTML = "";
-  let currentSheet;
-  selectedStudents.forEach((student, index) => {
-    if (index % 4 === 0) {
-      currentSheet = document.createElement("section");
-      currentSheet.className = "id-sheet";
-      currentSheet.setAttribute("aria-label", `A4 ID sheet ${Math.floor(index / 4) + 1}`);
-      elements.idGrid.appendChild(currentSheet);
-    }
-    const card = createCard(student, selectedStudents.length === 1 ? photoUrl : "");
-    currentSheet.appendChild(card);
-    new QRCode(card.querySelector(".id-qr"), {
-      text: buildQrPayload(student),
-      width: 256,
-      height: 256,
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.M,
+  elements.generate.disabled = true;
+  elements.generate.textContent = "Loading ID details…";
+  try {
+    const savedPhotos = await privateAssetUrls("student-photos", selectedStudents.map((student) => student.photo_path));
+    elements.idGrid.innerHTML = "";
+    let currentSheet;
+    selectedStudents.forEach((student, index) => {
+      if (index % 2 === 0) {
+        currentSheet = document.createElement("section");
+        currentSheet.className = "id-sheet";
+        currentSheet.setAttribute("aria-label", `A4 ID sheet ${Math.floor(index / 2) + 1}`);
+        elements.idGrid.appendChild(currentSheet);
+      }
+      const pair = document.createElement("div");
+      pair.className = "id-pair";
+      currentSheet.appendChild(pair);
+      const picture = selectedStudents.length === 1 && photoUrl ? photoUrl : savedPhotos.get(student.photo_path) || "";
+      const cards = renderStudentIdPair(pair, student, picture);
+      Object.values(cards).forEach((card) => {
+        card.dataset.studentNumber = student.studentNumber;
+        card.dataset.cardIndex = index;
+      });
     });
-    card.dataset.cardIndex = index;
-    card.dataset.studentNumber = student.studentNumber;
-  });
-  elements.empty.hidden = true;
-  elements.print.disabled = false;
-  elements.download.hidden = false;
-  setDownloadLabel(selectedStudents.length);
-  elements.idGrid.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function createCard(student, picture) {
-  const card = document.createElement("article");
-  card.className = "student-id";
-  card.setAttribute("aria-label", `QR ID for ${student.name}`);
-  card.innerHTML = `
-    <header class="id-header">
-      <img src="assets/img/psu-logo.png" alt="">
-      <div><strong>PALAWAN STATE UNIVERSITY</strong><small>BALABAC CAMPUS · USG</small><span>STUDENT ATTENDANCE ID</span></div>
-      <img src="assets/img/usg-logo.png" alt="">
-    </header>
-    <div class="id-media-row">
-      <div class="id-media-card">
-        <div class="id-photo">${picture ? `<img src="${picture}" alt="2×2 photo of ${escapeHtml(student.name)}">` : "2×2 ID<br>PHOTO"}</div>
-        <span>STUDENT PHOTO</span>
-      </div>
-      <div class="id-media-card">
-        <div class="id-qr" aria-label="Attendance QR code"></div>
-        <span>ATTENDANCE QR</span>
-      </div>
-    </div>
-    <div class="id-details">
-      <h3>${escapeHtml(student.name)}</h3>
-      <p class="student-number">${escapeHtml(student.studentNumber)}</p>
-      <p class="program-name">${escapeHtml(programLabel(student.program))}</p>
-    </div>
-    <div class="id-signature" aria-label="Blank for student's signature">
-      <span></span>
-      <small>STUDENT'S SIGNATURE</small>
-    </div>
-    <p class="id-attendance"><strong>USG ATTENDANCE</strong><span>Present to the assigned checker.</span></p>
-  `;
-  return card;
+    elements.empty.hidden = true;
+    elements.print.disabled = false;
+    elements.download.hidden = false;
+    setDownloadLabel(selectedStudents.length);
+    setStatus(elements.status, `${selectedStudents.length} front-and-back ID${selectedStudents.length === 1 ? "" : "s"} generated using saved student profile details.`, "success");
+    elements.idGrid.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    setStatus(elements.status, error.message, "error");
+  } finally {
+    elements.generate.textContent = "Generate IDs";
+    updateSelection();
+  }
 }
 
 async function downloadAllCards() {
   const cards = [...elements.idGrid.querySelectorAll(".student-id")];
   if (!cards.length) return;
+  const idCount = new Set(cards.map((card) => card.dataset.studentNumber)).size;
   elements.download.disabled = true;
   clearStatus(elements.status);
   try {
@@ -239,6 +215,7 @@ async function downloadAllCards() {
       throw new Error("The ZIP export libraries did not load. Refresh the page and try again, or use Print 4 IDs per A4.");
     }
     if (document.fonts?.ready) await document.fonts.ready;
+    await waitForImages(cards);
 
     const zip = new JSZip();
     for (let index = 0; index < cards.length; index += 1) {
@@ -247,7 +224,8 @@ async function downloadAllCards() {
       const canvas = await html2canvas(card, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
       const image = await canvasToBlob(canvas);
       const studentNumber = safeFilenamePart(card.dataset.studentNumber || `student-${index + 1}`);
-      zip.file(`PSU-USG-A6-ID-${studentNumber}.png`, image);
+      const side = card.dataset.idSide || `side-${index + 1}`;
+      zip.file(`PSU-USG-A6-ID-${studentNumber}-${side}.png`, image);
     }
 
     const archive = await zip.generateAsync({ type: "blob" }, ({ percent }) => {
@@ -259,13 +237,20 @@ async function downloadAllCards() {
     link.href = url;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setStatus(elements.status, `${cards.length} A6 ID${cards.length === 1 ? "" : "s"} downloaded in one ZIP file.`, "success");
+    setStatus(elements.status, `${idCount} front-and-back A6 ID${idCount === 1 ? "" : "s"} downloaded in one ZIP file.`, "success");
   } catch (error) {
     setStatus(elements.status, error.message, "error");
   } finally {
     elements.download.disabled = false;
-    setDownloadLabel(cards.length);
+    setDownloadLabel(idCount);
   }
+}
+
+function waitForImages(cards) {
+  return Promise.all(cards.flatMap((card) => [...card.querySelectorAll("img")]).map((image) => {
+    if (image.complete) return Promise.resolve();
+    return new Promise((resolve) => { image.addEventListener("load", resolve, { once: true }); image.addEventListener("error", resolve, { once: true }); });
+  }));
 }
 
 function canvasToBlob(canvas) {
@@ -283,5 +268,5 @@ function safeFilenamePart(value) {
 }
 
 function setDownloadLabel(count) {
-  elements.download.textContent = `Download all ${count} ID${count === 1 ? "" : "s"} as ZIP`;
+  elements.download.textContent = `Download ${count} front & back ID${count === 1 ? "" : "s"} as ZIP`;
 }

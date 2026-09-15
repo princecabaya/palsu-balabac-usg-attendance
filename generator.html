@@ -13,7 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
-  <script type="module" src="assets/js/generator.js?v=20260915.5"></script>
+  <script type="module" src="assets/js/generator.js?v=20260915.6"></script>
 </head>
 <body class="generator-body">
   <header class="site-header no-print">
@@ -43,7 +43,7 @@
         </div>
         <div class="toolbar">
           <button class="button button--quiet" id="refresh-roster" type="button">Refresh roster</button>
-          <button class="button button--secondary" id="print-cards" type="button" disabled>Print 4 IDs per A4</button>
+          <button class="button button--secondary" id="print-cards" type="button" disabled>Print front &amp; back on A4</button>
           <button class="button button--quiet" id="generator-logout" type="button" hidden>Sign out</button>
         </div>
       </div>
@@ -78,7 +78,7 @@
             </select>
           </label>
           <label class="field">
-            <span>2×2 photo for one card</span>
+            <span>Optional photo override for one ID</span>
             <input type="file" id="student-photo" accept="image/*">
           </label>
         </div>

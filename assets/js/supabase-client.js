@@ -122,6 +122,18 @@ export async function privateAssetUrl(bucket, path, expiresIn = 900) {
   return data.signedUrl;
 }
 
+export async function privateAssetUrls(bucket, paths, expiresIn = 900) {
+  const uniquePaths = [...new Set((paths || []).filter(Boolean))];
+  const urls = new Map();
+  for (let offset = 0; offset < uniquePaths.length; offset += 100) {
+    const batch = uniquePaths.slice(offset, offset + 100);
+    const { data, error } = await getSupabase().storage.from(bucket).createSignedUrls(batch, expiresIn);
+    if (error) throw databaseError(error);
+    (data || []).forEach((item, index) => urls.set(item.path || batch[index], item.signedUrl || ""));
+  }
+  return urls;
+}
+
 export async function saveStudentIdCopy(side, blob) {
   if (!blob || !["front", "back"].includes(side)) throw new Error("The ID copy is invalid.");
   const profile = await getOwnProfile();
@@ -143,7 +155,7 @@ export async function ownAttendanceReport() {
 
 export async function listStudents() {
   const { data, error } = await getSupabase().from("profiles")
-    .select("id, student_number, first_name, middle_name, last_name, suffix, program, account_status, must_change_password, photo_path, privacy_notice_accepted_at, updated_at")
+    .select("id, student_number, first_name, middle_name, last_name, suffix, program, account_status, must_change_password, date_of_birth, address, phone, emergency_contact_name, emergency_contact_phone, photo_path, privacy_notice_accepted_at, updated_at")
     .eq("role", "student").order("last_name").order("first_name");
   if (error) throw databaseError(error);
   return data || [];

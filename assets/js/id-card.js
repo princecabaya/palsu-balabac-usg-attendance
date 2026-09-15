@@ -13,7 +13,7 @@ export function renderStudentIdPair(container, profile, photoUrl = "") {
       <img src="assets/img/usg-logo.png" alt="">
     </header>
     <div class="id-media-row">
-      <div class="id-media-card"><div class="id-photo">${photoUrl ? `<img src="${escapeAttribute(photoUrl)}" alt="2×2 photo of ${escapeAttribute(name)}">` : "2×2 ID<br>PHOTO"}</div><span>STUDENT PHOTO</span></div>
+      <div class="id-media-card"><div class="id-photo">${photoUrl ? `<img src="${escapeAttribute(photoUrl)}" crossorigin="anonymous" alt="2×2 photo of ${escapeAttribute(name)}">` : "2×2 ID<br>PHOTO"}</div><span>STUDENT PHOTO</span></div>
       <div class="id-media-card"><div class="id-qr" aria-label="Attendance QR code"></div><span>ATTENDANCE QR</span></div>
     </div>
     <div class="id-details"><h3>${escapeHtml(name)}</h3><p class="student-number">${escapeHtml(profile.student_number)}</p><p class="program-name">${escapeHtml(programLabel(profile.program))}</p></div>

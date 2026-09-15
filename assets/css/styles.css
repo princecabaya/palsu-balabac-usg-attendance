@@ -270,6 +270,7 @@ input::placeholder { color: #93a1ab; }
 .empty-state__mark { display: grid; place-items: center; width: 78px; height: 78px; margin-bottom: 1rem; color: white; background: linear-gradient(135deg, var(--orange), var(--blue)); border: 8px solid white; outline: 1px solid var(--line); border-radius: 23px; font-weight: 950; }
 .id-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(397px, 1fr)); gap: 18px; align-items: start; }
 .id-sheet { display: contents; }
+.id-pair { display: contents; }
 
 .student-id {
   position: relative;
