@@ -66,6 +66,9 @@ test("database uses RLS, paired attendance, idempotency and audited corrections"
   assert.match(migration, /insert into public\.audit_log/);
   assert.match(migration, /student-photos/);
   assert.match(migration, /student-id-copies/);
+  assert.match(migration, /extensions\.digest/);
+  assert.match(migration, /extensions\.gen_random_bytes/);
+  assert.doesNotMatch(migration, /(?<!extensions\.)\bdigest\(/);
 });
 
 test("legacy attendance stays active until the explicit Supabase cutover", () => {

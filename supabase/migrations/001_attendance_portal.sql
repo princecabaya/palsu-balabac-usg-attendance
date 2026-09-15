@@ -3,7 +3,11 @@
 
 begin;
 
-create extension if not exists pgcrypto;
+-- Supabase keeps database extensions in the trusted `extensions` schema.
+-- Qualifying pgcrypto calls below also keeps SECURITY DEFINER search paths
+-- restricted to application objects and pg_temp.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -255,7 +259,7 @@ as $$
 declare
   alphabet constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   result text := '';
-  bytes bytea := gen_random_bytes(greatest(8, code_length));
+  bytes bytea := extensions.gen_random_bytes(greatest(8, code_length));
   i integer;
 begin
   for i in 0..code_length - 1 loop
@@ -286,7 +290,7 @@ begin
   insert into public.events(name, venue, starts_at, created_by)
   values (btrim(p_name), btrim(coalesce(p_venue, '')), p_starts_at, auth.uid()) returning * into v_event;
   insert into public.event_access_codes(event_id, code_hash, expires_at, created_by)
-  values (v_event.id, encode(digest(v_code, 'sha256'), 'hex'), p_code_expires_at, auth.uid())
+  values (v_event.id, encode(extensions.digest(v_code, 'sha256'), 'hex'), p_code_expires_at, auth.uid())
   returning * into v_access;
   insert into public.audit_log(actor_id, action, entity_type, entity_id, details)
   values (auth.uid(), 'event.created', 'event', v_event.id::text, jsonb_build_object('name', v_event.name));
@@ -317,7 +321,7 @@ begin
   update public.scanner_sessions set revoked_at = now() where event_id = p_event_id and revoked_at is null;
   select coalesce(max(version), 0) + 1 into v_version from public.event_access_codes where event_id = p_event_id;
   insert into public.event_access_codes(event_id, code_hash, version, expires_at, created_by)
-  values (p_event_id, encode(digest(v_code, 'sha256'), 'hex'), v_version, v_expiry, auth.uid());
+  values (p_event_id, encode(extensions.digest(v_code, 'sha256'), 'hex'), v_version, v_expiry, auth.uid());
   insert into public.audit_log(actor_id, action, entity_type, entity_id)
   values (auth.uid(), 'event.code_rotated', 'event', p_event_id::text);
   return jsonb_build_object('event', jsonb_build_object('id', v_event.id, 'name', v_event.name, 'venue', v_event.venue), 'controlCode', v_code, 'expiresAt', v_expiry);
@@ -352,20 +356,20 @@ declare
   v_code text := upper(regexp_replace(coalesce(p_control_code, ''), '[^A-Z0-9]', '', 'g'));
   v_access public.event_access_codes;
   v_event public.events;
-  v_token text := encode(gen_random_bytes(32), 'hex');
+  v_token text := encode(extensions.gen_random_bytes(32), 'hex');
   v_expires timestamptz;
 begin
   select c.* into v_access
   from public.event_access_codes c
   join public.events e on e.id = c.event_id
-  where c.code_hash = encode(digest(v_code, 'sha256'), 'hex')
+  where c.code_hash = encode(extensions.digest(v_code, 'sha256'), 'hex')
     and c.revoked_at is null and c.expires_at > now() and e.status = 'active'
   order by c.created_at desc limit 1;
   if not found then return jsonb_build_object('ok', false, 'code', 'INVALID_CONTROL_CODE', 'message', 'The control code is invalid or expired.'); end if;
   select * into v_event from public.events where id = v_access.event_id;
   v_expires := least(v_access.expires_at, now() + interval '8 hours');
   insert into public.scanner_sessions(event_id, access_code_id, token_hash, expires_at)
-  values (v_event.id, v_access.id, encode(digest(v_token, 'sha256'), 'hex'), v_expires);
+  values (v_event.id, v_access.id, encode(extensions.digest(v_token, 'sha256'), 'hex'), v_expires);
   return jsonb_build_object(
     'ok', true,
     'token', v_token,
@@ -383,7 +387,7 @@ set search_path = public, pg_temp
 as $$
   select s.* from public.scanner_sessions s
   join public.events e on e.id = s.event_id
-  where s.token_hash = encode(digest(coalesce(p_token, ''), 'sha256'), 'hex')
+  where s.token_hash = encode(extensions.digest(coalesce(p_token, ''), 'sha256'), 'hex')
     and s.revoked_at is null and s.expires_at > now() and e.status = 'active'
   limit 1;
 $$;
