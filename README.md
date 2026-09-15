@@ -7,12 +7,14 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 Stage 1 is included without interrupting the current event scanner:
 
 - `portal.html`: private student sign-in, forced first-password change, profile completion, 2×2 photo upload, front-and-back A6 ID, private ID-copy storage and personal Excel attendance report
-- `students.html`: administrator enrollment, account status, one-time temporary credentials, password reset and account deactivation/reactivation
+- `students.html`: individual or bulk roster enrollment, account status, one-time temporary credentials Excel export, password reset and account deactivation/reactivation
 - `privacy.html`: draft privacy notice for PSU review
 - `supabase/migrations/001_attendance_portal.sql`: Row-Level Security schema, private Storage buckets, paired Time In/Time Out, duplicate-request constraints, hashed checker access and audited corrections
 - `supabase/functions`: protected account provisioning and password-change functions
 
 Follow [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) to apply and test Stage 1. The existing Google-backed scanner remains the live path until Stage 1 is confirmed, after which Stage 2 switches the Scanner, Control, ID Generator and Reports pages to Supabase.
+
+Bulk enrollment accepts `.xlsx`, `.csv`, `.tsv`, `.md` and `.txt` rosters with Student Number, Last Name, Given Name, Middle Initial and Degree Program columns. It validates the entire roster in the administrator's browser, flags unusual IDs, skips profiles that are already enrolled, creates accounts through the protected Edge Function with three concurrent workers, and downloads newly issued temporary credentials as a confidential Excel file. The roster itself is never committed to this repository.
 
 ## Included
 

@@ -19,6 +19,7 @@ const jsFiles = [
   "assets/js/id-card.js",
   "assets/js/portal.js",
   "assets/js/students.js",
+  "assets/js/roster-import.js",
 ];
 
 const errors = [];

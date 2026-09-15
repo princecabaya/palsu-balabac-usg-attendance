@@ -55,6 +55,7 @@ test("administrator enrollment shows temporary credentials once and resets rathe
   assert.doesNotMatch(studentsPage, /existing password|view password/i);
   assert.match(adminFunction, /temporaryPassword\(\)/);
   assert.match(adminFunction, /admin\.auth\.admin\.updateUserById/);
+  assert.match(studentsPage, /Enroll a complete roster/);
 });
 
 test("database uses RLS, paired attendance, idempotency and audited corrections", () => {

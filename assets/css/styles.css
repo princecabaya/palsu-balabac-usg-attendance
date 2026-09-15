@@ -359,6 +359,28 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
 
 /* Student account administration */
 .student-admin-page > .section-heading { margin-bottom: 1.5rem; }
+.bulk-enrollment-panel { display: grid; gap: 1rem; margin-bottom: 1.25rem; border-top: 5px solid var(--orange); }
+.bulk-enrollment-panel .panel__heading p { max-width: 720px; color: var(--muted); }
+.bulk-upload-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.75rem; align-items: end; }
+.bulk-upload-row .field { margin: 0; }
+.bulk-review { display: grid; gap: 0.9rem; padding-top: 0.2rem; }
+.bulk-summary { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.bulk-summary div { display: grid; min-width: 105px; padding: 0.65rem 0.8rem; background: var(--canvas); border: 1px solid var(--line); border-radius: 11px; }
+.bulk-summary strong { color: var(--blue-dark); font-size: 1.2rem; }
+.bulk-summary span { color: var(--muted); font-size: 0.69rem; font-weight: 800; text-transform: uppercase; }
+.bulk-warning-confirm { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.8rem; color: #77450b; background: #fff7e8; border: 1px solid #edcf93; border-radius: 11px; font-size: 0.84rem; font-weight: 700; }
+.bulk-warning-confirm input { width: auto; margin-top: 0.2rem; accent-color: var(--orange); }
+.bulk-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; }
+.bulk-progress progress { width: 100%; height: 14px; accent-color: var(--green); }
+.bulk-progress span { color: var(--muted); font-size: 0.78rem; font-weight: 750; }
+.bulk-preview-wrap { max-height: 430px; overflow: auto; }
+.bulk-preview-wrap thead { position: sticky; top: 0; z-index: 1; }
+.bulk-preview-wrap td small, .bulk-row-status small { display: block; margin-top: 0.2rem; color: var(--muted); }
+.bulk-state { display: inline-flex; padding: 0.25rem 0.45rem; color: #245c38; background: var(--green-pale); border-radius: 999px; font-size: 0.68rem; font-weight: 850; text-transform: uppercase; }
+.bulk-state--invalid, .bulk-state--failed { color: #991b1b; background: #fee2e2; }
+.bulk-state--existing { color: #53616b; background: #edf0f2; }
+.bulk-state--creating { color: #075985; background: #e0f2fe; }
+.bulk-state--created { color: #166534; background: #dcfce7; }
 .student-admin-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); gap: 1.25rem; align-items: start; }
 .enrollment-form { display: grid; gap: 0.85rem; }
 .enrollment-form p { color: var(--muted); }
@@ -482,6 +504,7 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
   .scanner-aside .aside-art { height: 170px; }
   .scanner-aside .steps-list { display: grid; }
   .filter-row, .two-fields { grid-template-columns: 1fr; }
+  .bulk-upload-row, .bulk-progress { grid-template-columns: 1fr; }
   .filter-row .field--grow { grid-column: auto; }
   .selection-bar { align-items: flex-start; flex-wrap: wrap; }
   .selection-bar span { margin-left: 0; }

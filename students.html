@@ -8,10 +8,11 @@
   <meta name="description" content="USG administrator student enrollment and account management.">
   <title>Student Accounts | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.1">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.2">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
-  <script type="module" src="assets/js/students.js?v=20260915.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
+  <script type="module" src="assets/js/students.js?v=20260915.2"></script>
 </head>
 <body>
   <header class="site-header">
@@ -37,6 +38,33 @@
     </section>
 
     <section id="student-admin-content" hidden>
+      <section class="panel bulk-enrollment-panel">
+        <div class="panel__heading">
+          <div><p class="eyebrow">Bulk enrollment</p><h2>Enroll a complete roster</h2><p>Upload an Excel, CSV, TSV, Markdown or text roster. The file is checked in this browser before any account is created.</p></div>
+          <button class="button button--quiet button--small" id="download-roster-template" type="button">Download CSV template</button>
+        </div>
+        <div class="bulk-upload-row">
+          <label class="field"><span>Roster file</span><input type="file" id="bulk-roster-file" accept=".xlsx,.csv,.tsv,.md,.txt"></label>
+          <button class="button button--secondary" id="review-bulk-roster" type="button">Review roster</button>
+        </div>
+        <p class="field-note">Expected columns: Student Number, Last Name, Given Name, Middle Initial and Degree Program. The roster is never uploaded to GitHub.</p>
+        <div class="status" id="bulk-roster-status" hidden role="status"></div>
+
+        <div class="bulk-review" id="bulk-review" hidden>
+          <div class="bulk-summary" id="bulk-summary"></div>
+          <label class="bulk-warning-confirm" id="bulk-warning-confirm" hidden><input type="checkbox" id="confirm-bulk-warnings"> <span>I reviewed the unusual student numbers and confirm they are correct.</span></label>
+          <div class="bulk-progress" id="bulk-progress-wrap" hidden>
+            <progress id="bulk-progress" value="0" max="1"></progress>
+            <span id="bulk-progress-label">Preparing accounts…</span>
+          </div>
+          <div class="toolbar">
+            <button class="button button--primary" id="start-bulk-enrollment" type="button" disabled>Enroll all reviewed students</button>
+            <button class="button button--secondary" id="download-bulk-credentials" type="button" hidden>Download credentials Excel</button>
+          </div>
+          <div class="roster-wrap bulk-preview-wrap"><table class="roster-table"><thead><tr><th>Row</th><th>Student</th><th>Program</th><th>Review</th></tr></thead><tbody id="bulk-preview-body"></tbody></table></div>
+        </div>
+      </section>
+
       <div class="student-admin-grid">
         <form class="panel enrollment-form" id="enrollment-form">
           <div><p class="eyebrow">New account</p><h2>Enroll a student</h2><p>The system generates a secure one-time temporary password after enrollment.</p></div>

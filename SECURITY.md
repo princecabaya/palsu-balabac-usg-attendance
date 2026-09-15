@@ -3,6 +3,7 @@
 - Never commit a Supabase secret key, legacy service-role key, database password, student password, recovery token, or private student export. Only the browser-safe Project URL and publishable key belong in the GitHub Pages configuration.
 - Supabase student passwords are never stored or displayed by this application. Enrollment and password resets return a randomly generated temporary password once; a forgotten password is reset, not retrieved.
 - Student numbers are usernames but are not passwords. Students must replace the temporary password during first login.
+- Bulk rosters are parsed in the administrator's browser and are not committed to GitHub. The temporary-credentials workbook exists only on the administrator's device and must be stored securely, distributed individually, and deleted when no longer operationally required.
 - Student photos and saved ID copies use private Storage buckets protected by Row-Level Security. The public repository contains no roster, photos or attendance exports.
 - Students can select only their own profile and attendance rows. USG administrator access is checked from the protected `profiles` table rather than editable browser metadata.
 - Attendance uses unique request identifiers and a database constraint allowing only one open Time In per student and event. Corrections are audited instead of silently deleting history.
