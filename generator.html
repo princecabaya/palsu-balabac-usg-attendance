@@ -7,12 +7,13 @@
   <meta name="description" content="Generate printable student QR identification cards for PSU Balabac USG attendance.">
   <title>Student QR ID Generator | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260908.1">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.4">
   <script src="assets/js/config.js?v=20260907.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
-  <script type="module" src="assets/js/generator.js?v=20260908.1"></script>
+  <script type="module" src="assets/js/generator.js?v=20260915.5"></script>
 </head>
 <body class="generator-body">
   <header class="site-header no-print">
@@ -38,11 +39,12 @@
         <div>
           <p class="eyebrow">Official student QR ID</p>
           <h1>Build and print attendance IDs</h1>
-          <p class="lede">Select students from the USG Attendance Sheet. Download every generated ID in one ZIP file or print four A6 IDs on each A4 sheet.</p>
+          <p class="lede">Select enrolled students from the secure Supabase directory. Download every generated ID in one ZIP file or print four A6 IDs on each A4 sheet.</p>
         </div>
         <div class="toolbar">
           <button class="button button--quiet" id="refresh-roster" type="button">Refresh roster</button>
           <button class="button button--secondary" id="print-cards" type="button" disabled>Print 4 IDs per A4</button>
+          <button class="button button--quiet" id="generator-logout" type="button" hidden>Sign out</button>
         </div>
       </div>
 
@@ -50,12 +52,12 @@
         <div class="number-badge">ID</div>
         <form id="generator-login-form">
           <h2>Organizer sign-in</h2>
-          <p>Use the administrator password created during Google Sheet setup.</p>
-          <div class="inline-form">
-            <label class="sr-only" for="generator-password">Administrator password</label>
-            <input type="password" id="generator-password" autocomplete="current-password" placeholder="Administrator password" required>
-            <button class="button button--primary" type="submit">Open roster</button>
+          <p>Use the same Supabase administrator account used on the Students page.</p>
+          <div class="two-fields">
+            <label class="field"><span>Administrator email</span><input type="email" id="generator-admin-email" autocomplete="username" placeholder="USG administrator email" required></label>
+            <label class="field"><span>Password</span><input type="password" id="generator-password" autocomplete="current-password" placeholder="Administrator password" required></label>
           </div>
+          <button class="button button--primary" type="submit">Open roster</button>
           <div class="status" id="generator-login-status" hidden role="status"></div>
         </form>
       </section>

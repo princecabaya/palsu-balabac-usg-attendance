@@ -1,10 +1,12 @@
-import { adminLogin, getAdminSession, jsonp } from "./api.js?v=20260908.1";
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
 import { buildQrPayload, normalizeProgram, programLabel } from "./qr-payload.js";
+import { getOwnProfile, getSession, listStudents, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js";
 
 const elements = {
   login: document.querySelector("#generator-login"),
   loginForm: document.querySelector("#generator-login-form"),
+  email: document.querySelector("#generator-admin-email"),
+  password: document.querySelector("#generator-password"),
   loginStatus: document.querySelector("#generator-login-status"),
   tools: document.querySelector("#generator-tools"),
   refresh: document.querySelector("#refresh-roster"),
@@ -20,9 +22,9 @@ const elements = {
   status: document.querySelector("#generator-status"),
   idGrid: document.querySelector("#id-grid"),
   empty: document.querySelector("#card-empty"),
+  logout: document.querySelector("#generator-logout"),
 };
 
-let adminSession = getAdminSession();
 let students = [];
 let filteredStudents = [];
 let selected = new Set();
@@ -35,7 +37,8 @@ elements.loginForm.addEventListener("submit", async (event) => {
   button.textContent = "Signing in…";
   clearStatus(elements.loginStatus);
   try {
-    adminSession = await adminLogin(document.querySelector("#generator-password").value);
+    await signInAdmin(elements.password.value, elements.email.value.trim());
+    elements.password.value = "";
     await openGenerator();
   } catch (error) {
     setStatus(elements.loginStatus, error.message, "error");
@@ -46,6 +49,7 @@ elements.loginForm.addEventListener("submit", async (event) => {
 });
 
 elements.refresh.addEventListener("click", loadRoster);
+elements.logout.addEventListener("click", logout);
 elements.search.addEventListener("input", applyFilters);
 elements.program.addEventListener("change", applyFilters);
 elements.selectVisible.addEventListener("change", () => {
@@ -68,12 +72,33 @@ elements.generate.addEventListener("click", generateCards);
 elements.print.addEventListener("click", () => window.print());
 elements.download.addEventListener("click", downloadAllCards);
 
-if (adminSession) openGenerator();
+restore();
+
+async function restore() {
+  try {
+    if (!await getSession()) return;
+    const profile = await getOwnProfile();
+    if (profile.role === "admin" && profile.account_status === "active") await openGenerator();
+  } catch { /* Keep the administrator sign-in form visible. */ }
+}
 
 async function openGenerator() {
   elements.login.hidden = true;
   elements.tools.hidden = false;
+  elements.logout.hidden = false;
   await loadRoster();
+}
+
+async function logout() {
+  await signOut();
+  students = [];
+  filteredStudents = [];
+  selected.clear();
+  elements.tools.hidden = true;
+  elements.logout.hidden = true;
+  elements.login.hidden = false;
+  elements.rosterBody.innerHTML = "";
+  elements.email.focus();
 }
 
 async function loadRoster() {
@@ -81,15 +106,22 @@ async function loadRoster() {
   elements.refresh.disabled = true;
   elements.refresh.textContent = "Loading…";
   try {
-    const response = await jsonp("students", { token: adminSession.token });
-    students = response.students.map((student) => ({ ...student, program: normalizeProgram(student.program) }));
+    const profiles = await listStudents();
+    students = profiles
+      .filter((profile) => profile.account_status !== "inactive")
+      .map((profile) => ({
+        studentNumber: profile.student_number,
+        name: profileDisplayName(profile),
+        program: normalizeProgram(profile.program),
+      }));
     applyFilters();
-    setStatus(elements.status, `${students.length} students loaded from the USG Attendance Sheet.`, "success");
+    setStatus(elements.status, `${students.length} students loaded from the secure Supabase directory.`, "success");
   } catch (error) {
     setStatus(elements.status, error.message, "error");
     if (error.code === "SESSION_EXPIRED") {
       elements.login.hidden = false;
       elements.tools.hidden = true;
+      elements.logout.hidden = true;
     }
   } finally {
     elements.refresh.disabled = false;
