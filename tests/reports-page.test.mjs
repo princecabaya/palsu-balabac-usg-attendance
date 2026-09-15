@@ -5,12 +5,16 @@ import fs from "node:fs";
 const reportPage = fs.readFileSync(new URL("../reports.html", import.meta.url), "utf8");
 const reportSource = fs.readFileSync(new URL("../assets/js/reports.js", import.meta.url), "utf8");
 const backendSource = fs.readFileSync(new URL("../google-apps-script/Code.gs", import.meta.url), "utf8");
-const organizerPages = ["../index.html", "../generator.html", "../dashboard.html"]
+const organizerPages = ["../index.html", "../generator.html", "../dashboard.html", "../reports.html"]
   .map((path) => fs.readFileSync(new URL(path, import.meta.url), "utf8"));
 
 test("organizer navigation includes the administrator Reports tab", () => {
   for (const page of organizerPages) assert.match(page, /href="reports\.html">Reports<\/a>/);
   assert.match(reportPage, /class="is-active" href="reports\.html">Reports<\/a>/);
+});
+
+test("organizer navigation keeps the Students tab on every organizer page", () => {
+  for (const page of organizerPages) assert.match(page, /href="students\.html">Students<\/a>/);
 });
 
 test("reports search accepts a student name or student ID", () => {

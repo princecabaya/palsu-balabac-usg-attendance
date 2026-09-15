@@ -30,6 +30,12 @@ test("students sign in with their student number and must change temporary passw
   assert.match(portalSource, /changeStudentPassword/);
 });
 
+test("student portal does not expose organizer navigation", () => {
+  assert.doesNotMatch(portal, /href="(?:index|generator|dashboard|reports)\.html"/);
+  assert.doesNotMatch(portal, /<nav\b/);
+  assert.match(portal, /id="portal-logout"/);
+});
+
 test("student profile collects requested back-of-ID and emergency fields", () => {
   for (const id of ["profile-birth-date", "profile-address", "profile-phone", "profile-emergency-name", "profile-emergency-phone", "profile-photo"]) {
     assert.match(portal, new RegExp(`id="${id}"`));
@@ -60,6 +66,10 @@ test("students can download a real Excel attendance report", () => {
   assert.match(portal, /id="download-own-report"/);
   assert.match(portalSource, /new window\.ExcelJS\.Workbook/);
   assert.match(portalSource, /application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet/);
+  assert.match(portalSource, /groupAttendanceSessions/);
+  assert.match(portalSource, /First Time In/);
+  assert.match(portalSource, /Second Time Out/);
+  assert.match(portal, /activities attended/);
 });
 
 test("administrator enrollment shows temporary credentials once and resets rather than retrieves passwords", () => {

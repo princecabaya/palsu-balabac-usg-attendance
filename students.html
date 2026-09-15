@@ -8,11 +8,11 @@
   <meta name="description" content="USG administrator student enrollment and account management.">
   <title>Student Accounts | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.3">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/students.js?v=20260915.2"></script>
+  <script type="module" src="assets/js/students.js?v=20260915.3"></script>
 </head>
 <body>
   <header class="site-header">
@@ -62,6 +62,25 @@
             <button class="button button--secondary" id="download-bulk-credentials" type="button" hidden>Download credentials Excel</button>
           </div>
           <div class="roster-wrap bulk-preview-wrap"><table class="roster-table"><thead><tr><th>Row</th><th>Student</th><th>Program</th><th>Review</th></tr></thead><tbody id="bulk-preview-body"></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="panel historical-import-panel">
+        <div class="panel__heading">
+          <div><p class="eyebrow">Historical records</p><h2>Import recorded attendance</h2><p>Transfer the existing Event sheets into each student's private Supabase attendance report.</p></div>
+        </div>
+        <div class="bulk-upload-row">
+          <label class="field"><span>USG Attendance Excel file</span><input type="file" id="historical-attendance-file" accept=".xlsx"></label>
+          <button class="button button--secondary" id="review-historical-attendance" type="button">Review attendance</button>
+        </div>
+        <p class="field-note">The workbook is read locally in this browser. Only validated event, student-number, Time In and Time Out records are sent to the attendance database.</p>
+        <div class="status" id="historical-attendance-status" hidden role="status"></div>
+        <div class="historical-review" id="historical-attendance-review" hidden>
+          <div class="bulk-summary" id="historical-attendance-summary"></div>
+          <div class="roster-wrap"><table class="roster-table"><thead><tr><th>Event</th><th>Venue</th><th>Student records</th><th>Sessions</th></tr></thead><tbody id="historical-event-preview"></tbody></table></div>
+          <details id="historical-corrections" hidden><summary>Review corrected student numbers</summary><div class="roster-wrap historical-correction-list"><table class="roster-table"><thead><tr><th>Student</th><th>Workbook number</th><th>Matched account</th></tr></thead><tbody id="historical-corrections-body"></tbody></table></div></details>
+          <label class="bulk-warning-confirm"><input type="checkbox" id="confirm-historical-attendance"> <span>I reviewed the corrected student numbers and understand that blank Time Out entries will remain blank in student reports.</span></label>
+          <button class="button button--primary" id="import-historical-attendance" type="button" disabled>Import attendance records</button>
         </div>
       </section>
 

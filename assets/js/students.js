@@ -1,12 +1,14 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
 import { administerStudent, getOwnProfile, getSession, listStudents, normalizeStudentNumber, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js";
 import { parseRosterFile } from "./roster-import.js";
+import { parseHistoricalAttendanceFile } from "./attendance-import.js?v=20260915.3";
 
 const elements = {
   login: document.querySelector("#student-admin-login"), loginForm: document.querySelector("#student-admin-login-form"), email: document.querySelector("#student-admin-email"), password: document.querySelector("#student-admin-password"), loginStatus: document.querySelector("#student-admin-login-status"), logout: document.querySelector("#student-admin-logout"), content: document.querySelector("#student-admin-content"),
   form: document.querySelector("#enrollment-form"), number: document.querySelector("#enroll-student-number"), firstName: document.querySelector("#enroll-first-name"), middleName: document.querySelector("#enroll-middle-name"), lastName: document.querySelector("#enroll-last-name"), suffix: document.querySelector("#enroll-suffix"), program: document.querySelector("#enroll-program"), enrollmentStatus: document.querySelector("#enrollment-status"),
   credentials: document.querySelector("#credential-panel"), credentialUsername: document.querySelector("#credential-username"), credentialPassword: document.querySelector("#credential-password"), copyCredentials: document.querySelector("#copy-credentials"), printCredentials: document.querySelector("#print-credentials"), clearCredentials: document.querySelector("#clear-credentials"),
   bulkFile: document.querySelector("#bulk-roster-file"), reviewBulk: document.querySelector("#review-bulk-roster"), bulkStatus: document.querySelector("#bulk-roster-status"), bulkReview: document.querySelector("#bulk-review"), bulkSummary: document.querySelector("#bulk-summary"), bulkWarningConfirm: document.querySelector("#bulk-warning-confirm"), confirmWarnings: document.querySelector("#confirm-bulk-warnings"), bulkProgressWrap: document.querySelector("#bulk-progress-wrap"), bulkProgress: document.querySelector("#bulk-progress"), bulkProgressLabel: document.querySelector("#bulk-progress-label"), startBulk: document.querySelector("#start-bulk-enrollment"), downloadBulkCredentials: document.querySelector("#download-bulk-credentials"), downloadRosterTemplate: document.querySelector("#download-roster-template"), bulkPreviewBody: document.querySelector("#bulk-preview-body"),
+  historicalFile: document.querySelector("#historical-attendance-file"), reviewHistorical: document.querySelector("#review-historical-attendance"), historicalStatus: document.querySelector("#historical-attendance-status"), historicalReview: document.querySelector("#historical-attendance-review"), historicalSummary: document.querySelector("#historical-attendance-summary"), historicalEventPreview: document.querySelector("#historical-event-preview"), historicalCorrections: document.querySelector("#historical-corrections"), historicalCorrectionsBody: document.querySelector("#historical-corrections-body"), confirmHistorical: document.querySelector("#confirm-historical-attendance"), importHistorical: document.querySelector("#import-historical-attendance"),
   search: document.querySelector("#student-directory-search"), refresh: document.querySelector("#refresh-students"), body: document.querySelector("#student-directory-body"), directoryStatus: document.querySelector("#student-directory-status"),
 };
 
@@ -15,6 +17,7 @@ let currentCredentials = null;
 let bulkRows = [];
 let bulkCredentials = [];
 let bulkRunning = false;
+let historicalAttendance = null;
 elements.loginForm.addEventListener("submit", login);
 elements.logout.addEventListener("click", logout);
 elements.form.addEventListener("submit", enroll);
@@ -30,6 +33,10 @@ elements.confirmWarnings.addEventListener("change", updateBulkButton);
 elements.startBulk.addEventListener("click", startBulkEnrollment);
 elements.downloadBulkCredentials.addEventListener("click", downloadCredentialsWorkbook);
 elements.downloadRosterTemplate.addEventListener("click", downloadRosterTemplate);
+elements.reviewHistorical.addEventListener("click", reviewHistoricalAttendance);
+elements.historicalFile.addEventListener("change", reviewHistoricalAttendance);
+elements.confirmHistorical.addEventListener("change", () => { elements.importHistorical.disabled = !elements.confirmHistorical.checked || !historicalAttendance; });
+elements.importHistorical.addEventListener("click", importHistoricalAttendance);
 restore();
 
 async function restore() {
@@ -262,6 +269,69 @@ async function downloadCredentialsWorkbook() {
   sheet.columns = [{ width: 22 }, { width: 24 }, { width: 34 }, { width: 12 }, { width: 66 }];
   const buffer = await workbook.xlsx.writeBuffer();
   downloadBlob(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `USG-Temporary-Credentials-${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+async function reviewHistoricalAttendance() {
+  const file = elements.historicalFile.files?.[0];
+  if (!file) return;
+  busy(elements.reviewHistorical, true, "Reading attendance…");
+  clearStatus(elements.historicalStatus);
+  try {
+    historicalAttendance = await parseHistoricalAttendanceFile(file);
+    const { stats, corrections, unresolved, events } = historicalAttendance;
+    elements.historicalSummary.innerHTML = `
+      <div><strong>${stats.eventCount}</strong><span>events</span></div>
+      <div><strong>${stats.studentEventRows}</strong><span>student records</span></div>
+      <div><strong>${stats.sessionCount}</strong><span>attendance sessions</span></div>
+      <div><strong>${stats.completeSessions}</strong><span>with Time Out</span></div>
+      <div><strong>${stats.openSessions}</strong><span>blank Time Out</span></div>
+    `;
+    elements.historicalEventPreview.innerHTML = events.map((event) => {
+      const students = new Set(event.records.map((record) => record.studentNumber)).size;
+      return `<tr><td><strong>${escapeHtml(event.name)}</strong><small>${escapeHtml(event.startsAt.slice(0, 10))}</small></td><td>${escapeHtml(event.venue || "No venue")}</td><td>${students}</td><td>${event.records.length}</td></tr>`;
+    }).join("");
+    elements.historicalCorrections.hidden = corrections.length === 0;
+    elements.historicalCorrectionsBody.innerHTML = corrections.map((item) => `<tr><td><strong>${escapeHtml(item.name)}</strong><small>Event ${item.eventNo}, row ${item.rowNumber}</small></td><td>${escapeHtml(item.from || "Missing")}</td><td>${escapeHtml(item.to)}</td></tr>`).join("");
+    elements.confirmHistorical.checked = false;
+    elements.importHistorical.disabled = true;
+    elements.historicalReview.hidden = false;
+    setStatus(elements.historicalStatus, unresolved.length
+      ? `${stats.sessionCount} sessions are ready. ${unresolved.length} workbook row${unresolved.length === 1 ? "" : "s"} could not be matched by name and may be skipped if no account has that student number.`
+      : `${stats.sessionCount} attendance sessions are ready for a duplicate-safe import.`, unresolved.length ? "info" : "success");
+  } catch (error) {
+    historicalAttendance = null;
+    elements.historicalReview.hidden = true;
+    setStatus(elements.historicalStatus, error.message, "error");
+  } finally {
+    busy(elements.reviewHistorical, false, "Review attendance");
+  }
+}
+
+async function importHistoricalAttendance() {
+  if (!historicalAttendance || !elements.confirmHistorical.checked) return;
+  const { stats } = historicalAttendance;
+  if (!window.confirm(`Synchronize ${stats.sessionCount} attendance sessions across ${stats.eventCount} events? Existing records from the same event, student and Time In will be updated, not duplicated.`)) return;
+  busy(elements.importHistorical, true, "Importing attendance…");
+  elements.historicalFile.disabled = true;
+  elements.reviewHistorical.disabled = true;
+  clearStatus(elements.historicalStatus);
+  try {
+    const result = await administerStudent({
+      action: "importAttendance",
+      sourceName: historicalAttendance.sourceName,
+      events: historicalAttendance.events,
+    });
+    const unmatched = result.unmatchedStudents || [];
+    setStatus(elements.historicalStatus, unmatched.length
+      ? `${result.synchronizedSessions} sessions were synchronized. ${unmatched.length} student number${unmatched.length === 1 ? "" : "s"} had no enrolled account and were skipped: ${unmatched.slice(0, 12).join(", ")}${unmatched.length > 12 ? "…" : ""}. Enroll them, then import the same file again.`
+      : `${result.synchronizedSessions} attendance sessions across ${result.eventsProcessed} events were synchronized successfully. Students can now see them in their attendance reports.`, unmatched.length ? "info" : "success");
+  } catch (error) {
+    setStatus(elements.historicalStatus, error.message, "error");
+  } finally {
+    elements.historicalFile.disabled = false;
+    elements.reviewHistorical.disabled = false;
+    busy(elements.importHistorical, false, "Import attendance records");
+  }
 }
 
 function downloadRosterTemplate() {

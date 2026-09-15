@@ -8,7 +8,7 @@
   <meta name="description" content="Private PSU Balabac USG student attendance portal.">
   <title>Student Portal | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.2">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.4">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
@@ -16,7 +16,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/portal.js?v=20260915.2"></script>
+  <script type="module" src="assets/js/portal.js?v=20260915.4"></script>
 </head>
 <body class="portal-body">
   <header class="site-header no-print">
@@ -24,11 +24,7 @@
       <span class="brand__seals"><img src="assets/img/psu-logo.png" alt="Palawan State University logo"><img src="assets/img/usg-logo.png" alt="University Student Government logo"></span>
       <span><strong>Student Portal</strong><small>PSU Balabac Campus · USG Attendance</small></span>
     </a>
-    <nav class="nav" aria-label="Student portal navigation">
-      <a class="is-active" href="portal.html">My Account</a>
-      <a href="privacy.html">Privacy</a>
-      <button class="nav-button" id="portal-logout" type="button" hidden>Sign out</button>
-    </nav>
+    <div class="portal-header-actions"><button class="nav-button" id="portal-logout" type="button" hidden>Sign out</button></div>
   </header>
 
   <main class="page page--wide portal-page">
@@ -106,8 +102,8 @@
           <div><p class="eyebrow">Attendance history</p><h2>My attended activities</h2><p>Time In and Time Out are shown using Philippine time.</p></div>
           <button class="button button--secondary" id="download-own-report" type="button">Download Excel report</button>
         </div>
-        <div class="report-stat-row"><div class="report-stat"><strong id="own-event-count">0</strong><span>attendance sessions</span></div><div class="report-stat"><strong id="own-total-time">00:00:00</strong><span>total recorded time</span></div></div>
-        <div class="report-table-wrap"><table class="report-table"><thead><tr><th>Activity</th><th>Date</th><th>Time In</th><th>Time Out</th><th>Total</th></tr></thead><tbody id="own-report-body"></tbody></table></div>
+        <div class="report-stat-row"><div class="report-stat"><strong id="own-event-count">0</strong><span>activities attended</span></div><div class="report-stat"><strong id="own-total-time">00:00:00</strong><span>total recorded time</span></div></div>
+        <div class="report-table-wrap"><table class="report-table"><thead><tr><th>Activity</th><th>Date</th><th>First In</th><th>First Out</th><th>Second In</th><th>Second Out</th><th>Total</th></tr></thead><tbody id="own-report-body"></tbody></table></div>
         <p class="report-empty" id="own-report-empty">No attendance has been recorded yet.</p>
         <div class="status" id="own-report-status" hidden role="status"></div>
       </section>

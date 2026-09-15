@@ -20,6 +20,8 @@ const jsFiles = [
   "assets/js/portal.js",
   "assets/js/students.js",
   "assets/js/roster-import.js",
+  "assets/js/attendance-import.js",
+  "assets/js/attendance-report.js",
 ];
 
 const errors = [];

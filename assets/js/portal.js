@@ -1,5 +1,6 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
 import { renderStudentIdPair } from "./id-card.js?v=20260915.2";
+import { groupAttendanceSessions } from "./attendance-report.js?v=20260915.3";
 import {
   changeStudentPassword,
   getOwnProfile,
@@ -231,12 +232,12 @@ function printIdPair() {
 async function loadAttendance() {
   clearStatus(elements.reportStatus);
   try {
-    attendance = await ownAttendanceReport();
+    attendance = groupAttendanceSessions(await ownAttendanceReport());
     const seconds = attendance.reduce((sum, row) => sum + Number(row.total_seconds || 0), 0);
     elements.eventCount.textContent = String(attendance.length);
     elements.totalTime.textContent = duration(seconds);
     elements.reportEmpty.hidden = attendance.length > 0;
-    elements.reportBody.innerHTML = attendance.map((row) => `<tr><td data-label="Activity"><strong>${escapeHtml(row.event_name)}</strong><small>${escapeHtml(row.venue || "No venue")}</small></td><td data-label="Date">${escapeHtml(date(row.time_in))}</td><td data-label="Time In">${escapeHtml(time(row.time_in))}</td><td data-label="Time Out">${escapeHtml(time(row.time_out))}</td><td data-label="Total">${duration(row.total_seconds)}</td></tr>`).join("");
+    elements.reportBody.innerHTML = attendance.map((row) => `<tr><td data-label="Activity"><strong>${escapeHtml(row.event_name)}</strong><small>${escapeHtml(row.venue || "No venue")}</small></td><td data-label="Date">${escapeHtml(date(row.first_time_in))}</td><td data-label="First In">${escapeHtml(time(row.first_time_in))}</td><td data-label="First Out">${escapeHtml(time(row.first_time_out))}</td><td data-label="Second In">${escapeHtml(time(row.second_time_in))}</td><td data-label="Second Out">${escapeHtml(time(row.second_time_out))}</td><td data-label="Total">${duration(row.total_seconds)}</td></tr>`).join("");
   } catch (error) {
     setStatus(elements.reportStatus, error.message, "error");
   }
@@ -256,9 +257,9 @@ async function downloadExcelReport() {
   sheet.addRow(["Student Number", profile.student_number]);
   sheet.addRow(["Program", profile.program]);
   sheet.addRow([]);
-  sheet.addRow(["Activity", "Venue", "Date", "Time In", "Time Out", "Total Time", "Offline Entry"]);
-  attendance.forEach((row) => sheet.addRow([row.event_name, row.venue || "", date(row.time_in), time(row.time_in), time(row.time_out), duration(row.total_seconds), row.time_in_offline || row.time_out_offline ? "Yes" : "No"]));
-  sheet.columns = [{ width: 32 }, { width: 22 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 14 }];
+  sheet.addRow(["Activity", "Venue", "Date", "First Time In", "First Time Out", "Second Time In", "Second Time Out", "Total Time"]);
+  attendance.forEach((row) => sheet.addRow([row.event_name, row.venue || "", date(row.first_time_in), time(row.first_time_in), time(row.first_time_out), time(row.second_time_in), time(row.second_time_out), duration(row.total_seconds)]));
+  sheet.columns = [{ width: 32 }, { width: 22 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 16 }];
   sheet.getRow(2).font = { bold: true, size: 14 };
   sheet.getRow(7).font = { bold: true, color: { argb: "FFFFFFFF" } };
   sheet.getRow(7).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF47A31" } };
