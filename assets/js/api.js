@@ -1,3 +1,5 @@
+import { supabaseAction, supabaseAdminLogin, supabaseScannerLogin, usesSupabaseBackend } from "./supabase-attendance-api.js";
+
 const CONFIG_KEY = "psu-usg-api-url";
 const ADMIN_SESSION_KEY = "psu-usg-admin-session";
 const SCANNER_SESSION_KEY = "psu-usg-scanner-session";
@@ -21,10 +23,12 @@ export function isAppsScriptUrl(value) {
 }
 
 export function getApiUrl() {
+  if (usesSupabaseBackend()) return window.USG_ATTENDANCE_CONFIG?.supabaseUrl || "";
   return configuredUrl();
 }
 
 export function setApiUrl(value) {
+  if (usesSupabaseBackend()) return getApiUrl();
   const url = String(value).trim();
   if (!isAppsScriptUrl(url)) throw new Error("Paste the Google Apps Script web app URL ending in /exec.");
   localStorage.setItem(CONFIG_KEY, url);
@@ -38,6 +42,7 @@ export async function sha256(value) {
 }
 
 export async function jsonp(action, params = {}, timeoutMs = 18000) {
+  if (usesSupabaseBackend()) return supabaseAction(action, params);
   try {
     return await jsonpOnce(action, params, timeoutMs);
   } catch (error) {
@@ -109,6 +114,11 @@ async function challengeLogin(scope, secret) {
 }
 
 export async function adminLogin(password) {
+  if (usesSupabaseBackend()) {
+    const session = await supabaseAdminLogin(password);
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+    return session;
+  }
   const result = await challengeLogin("admin", password);
   const session = { token: result.token, expiresAt: result.expiresAt };
   localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
@@ -116,6 +126,12 @@ export async function adminLogin(password) {
 }
 
 export async function scannerLogin(code) {
+  if (usesSupabaseBackend()) {
+    const result = await supabaseScannerLogin(normalizeControlCode(code));
+    const session = { token: result.token, expiresAt: result.expiresAt, event: result.event };
+    sessionStorage.setItem(SCANNER_SESSION_KEY, JSON.stringify(session));
+    return session;
+  }
   const result = await challengeLogin("scanner", code);
   const session = {
     token: result.token,

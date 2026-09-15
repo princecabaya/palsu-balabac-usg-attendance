@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f47a31">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="USG administrator student enrollment and account management.">
+  <title>Student Accounts | PSU Balabac USG Attendance</title>
+  <link rel="icon" href="assets/img/usg-logo.png">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.1">
+  <script src="assets/js/config.js?v=20260915.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
+  <script type="module" src="assets/js/students.js?v=20260915.1"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand__seals"><img src="assets/img/psu-logo.png" alt="Palawan State University logo"><img src="assets/img/usg-logo.png" alt="University Student Government logo"></span><span><strong>USG Attendance</strong><small>PSU Balabac Campus</small></span></a>
+    <nav class="nav" aria-label="Administrator navigation"><a href="index.html">Scanner</a><a href="generator.html">ID Generator</a><a href="dashboard.html">Control</a><a href="reports.html">Reports</a><a class="is-active" href="students.html">Students</a></nav>
+  </header>
+
+  <main class="page page--wide student-admin-page">
+    <section class="section-heading"><div><p class="eyebrow">USG administration</p><h1>Student accounts</h1><p class="lede">Enroll students, monitor account activation, reset forgotten passwords and deactivate old accounts.</p></div><button class="button button--quiet" id="student-admin-logout" type="button" hidden>Sign out</button></section>
+
+    <section class="login-card" id="student-admin-login">
+      <div class="number-badge">A</div>
+      <form id="student-admin-login-form">
+        <h2>Administrator sign-in</h2>
+        <p>Use the private email and password assigned to the USG administrator.</p>
+        <div class="two-fields">
+          <label class="field"><span>Administrator email</span><input type="email" id="student-admin-email" autocomplete="username" placeholder="USG administrator email" required></label>
+          <label class="field"><span>Password</span><input type="password" id="student-admin-password" autocomplete="current-password" placeholder="Administrator password" required></label>
+        </div>
+        <button class="button button--primary" type="submit">Open student accounts</button>
+        <div class="status" id="student-admin-login-status" hidden role="alert"></div>
+      </form>
+    </section>
+
+    <section id="student-admin-content" hidden>
+      <div class="student-admin-grid">
+        <form class="panel enrollment-form" id="enrollment-form">
+          <div><p class="eyebrow">New account</p><h2>Enroll a student</h2><p>The system generates a secure one-time temporary password after enrollment.</p></div>
+          <label class="field"><span>Student number / username</span><input id="enroll-student-number" placeholder="2026-10-0007BL" required maxlength="40"></label>
+          <div class="two-fields"><label class="field"><span>First name</span><input id="enroll-first-name" required maxlength="80"></label><label class="field"><span>Middle name or initial</span><input id="enroll-middle-name" maxlength="80"></label></div>
+          <div class="two-fields"><label class="field"><span>Last name</span><input id="enroll-last-name" required maxlength="80"></label><label class="field"><span>Suffix</span><input id="enroll-suffix" maxlength="20" placeholder="Jr., III"></label></div>
+          <label class="field"><span>Program</span><select id="enroll-program" required><option value="">Choose program</option><option value="BEEd">Bachelor of Elementary Education</option><option value="BSE">Bachelor of Science in Entrepreneurship</option><option value="BSA">Bachelor of Science in Agriculture</option></select></label>
+          <button class="button button--primary" type="submit">Create student account</button>
+          <div class="status" id="enrollment-status" hidden role="alert"></div>
+        </form>
+
+        <section class="panel credential-panel" id="credential-panel" hidden>
+          <p class="eyebrow">Show once</p><h2>Temporary credentials</h2><p>Give these credentials only to the verified student. The password is not stored and cannot be displayed again.</p>
+          <dl class="credential-values"><div><dt>Username</dt><dd id="credential-username"></dd></div><div><dt>Temporary password</dt><dd id="credential-password"></dd></div></dl>
+          <div class="toolbar"><button class="button button--secondary" id="copy-credentials" type="button">Copy credentials</button><button class="button button--quiet" id="print-credentials" type="button">Print slip</button><button class="button button--quiet" id="clear-credentials" type="button">Clear from screen</button></div>
+        </section>
+      </div>
+
+      <section class="panel student-directory-panel">
+        <div class="panel__heading"><div><p class="eyebrow">Directory</p><h2>Enrolled students</h2></div><button class="button button--quiet button--small" id="refresh-students" type="button">Refresh</button></div>
+        <label class="field"><span>Search name or student number</span><input type="search" id="student-directory-search" placeholder="Search students"></label>
+        <div class="roster-wrap"><table class="roster-table account-table"><thead><tr><th>Student</th><th>Program</th><th>Account</th><th>Profile</th><th>Actions</th></tr></thead><tbody id="student-directory-body"></tbody></table></div>
+        <div class="status" id="student-directory-status" hidden role="status"></div>
+      </section>
+    </section>
+  </main>
+  <footer class="site-footer">Palawan State University – Balabac Campus · University Student Government</footer>
+</body>
+</html>

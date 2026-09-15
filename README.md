@@ -1,6 +1,18 @@
 # PSU Balabac USG QR Attendance
 
-A mobile-first QR attendance checker for Palawan State University – Balabac Campus and the University Student Government. The public site runs on GitHub Pages; a Google Apps Script web app securely writes attendance to the supplied **USG Attendance file** Google Sheet.
+A mobile-first QR attendance checker for Palawan State University – Balabac Campus and the University Student Government. The public site runs on GitHub Pages. A staged migration is underway from Google Apps Script/Sheets to Supabase authentication, PostgreSQL and private file storage.
+
+## Supabase migration status
+
+Stage 1 is included without interrupting the current event scanner:
+
+- `portal.html`: private student sign-in, forced first-password change, profile completion, 2×2 photo upload, front-and-back A6 ID, private ID-copy storage and personal Excel attendance report
+- `students.html`: administrator enrollment, account status, one-time temporary credentials, password reset and account deactivation/reactivation
+- `privacy.html`: draft privacy notice for PSU review
+- `supabase/migrations/001_attendance_portal.sql`: Row-Level Security schema, private Storage buckets, paired Time In/Time Out, duplicate-request constraints, hashed checker access and audited corrections
+- `supabase/functions`: protected account provisioning and password-change functions
+
+Follow [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) to apply and test Stage 1. The existing Google-backed scanner remains the live path until Stage 1 is confirmed, after which Stage 2 switches the Scanner, Control, ID Generator and Reports pages to Supabase.
 
 ## Included
 
@@ -20,6 +32,7 @@ A mobile-first QR attendance checker for Palawan State University – Balabac Ca
 - Per-student event history with printable/PDF and CSV time-in/time-out reports after each successful scan
 - Administrator-only Reports tab with roster search by student name or student ID
 - Double-tap camera start/refocus assistance for tablets and phones
+- Secure student-account and Supabase migration foundation
 
 ## Sheet compatibility
 

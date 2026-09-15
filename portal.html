@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f47a31">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Private PSU Balabac USG student attendance portal.">
+  <title>Student Portal | PSU Balabac USG Attendance</title>
+  <link rel="icon" href="assets/img/usg-logo.png">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.1">
+  <script src="assets/js/config.js?v=20260915.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
+  <script type="module" src="assets/js/portal.js?v=20260915.1"></script>
+</head>
+<body class="portal-body">
+  <header class="site-header no-print">
+    <a class="brand" href="portal.html" aria-label="PSU Balabac USG Student Portal">
+      <span class="brand__seals"><img src="assets/img/psu-logo.png" alt="Palawan State University logo"><img src="assets/img/usg-logo.png" alt="University Student Government logo"></span>
+      <span><strong>Student Portal</strong><small>PSU Balabac Campus · USG Attendance</small></span>
+    </a>
+    <nav class="nav" aria-label="Student portal navigation">
+      <a class="is-active" href="portal.html">My Account</a>
+      <a href="privacy.html">Privacy</a>
+      <button class="nav-button" id="portal-logout" type="button" hidden>Sign out</button>
+    </nav>
+  </header>
+
+  <main class="page page--wide portal-page">
+    <section class="portal-hero no-print">
+      <div><p class="eyebrow">Secure student access</p><h1>My attendance account</h1><p class="lede">Complete your profile, upload your 2×2 photo, access your front-and-back attendance ID, and review activities you attended.</p></div>
+      <div class="privacy-badge"><strong>Private by default</strong><span>Only you and authorized USG administrators can access your profile.</span></div>
+    </section>
+
+    <section class="login-card portal-login no-print" id="student-login">
+      <div class="number-badge">ID</div>
+      <form id="student-login-form">
+        <h2>Student sign-in</h2>
+        <p>Your username is your student number. Use the temporary password issued by the USG on your first login.</p>
+        <div class="two-fields">
+          <label class="field"><span>Student number</span><input id="student-username" autocomplete="username" placeholder="2026-10-0007BL" required></label>
+          <label class="field"><span>Password</span><input type="password" id="student-password" autocomplete="current-password" required></label>
+        </div>
+        <button class="button button--primary" type="submit">Sign in</button>
+        <div class="status" id="student-login-status" hidden role="alert"></div>
+      </form>
+    </section>
+
+    <section class="panel password-panel no-print" id="password-change" hidden>
+      <p class="eyebrow">First login requirement</p>
+      <h2>Create your private password</h2>
+      <p>The temporary password cannot be kept. Use at least 12 characters containing uppercase and lowercase letters, a number and a symbol.</p>
+      <form id="password-change-form" class="two-fields">
+        <label class="field"><span>New password</span><input type="password" id="new-password" autocomplete="new-password" minlength="12" required></label>
+        <label class="field"><span>Confirm new password</span><input type="password" id="confirm-password" autocomplete="new-password" minlength="12" required></label>
+        <button class="button button--primary" type="submit">Change password and activate account</button>
+      </form>
+      <div class="status" id="password-change-status" hidden role="alert"></div>
+    </section>
+
+    <section id="student-account" hidden>
+      <section class="account-heading no-print">
+        <div><p class="eyebrow">Welcome</p><h2 id="account-student-name">Student name</h2><p id="account-student-meta"></p></div>
+        <span class="status-tag" id="account-status">Active</span>
+      </section>
+
+      <div class="portal-grid no-print">
+        <form class="panel profile-form" id="student-profile-form">
+          <div><p class="eyebrow">Personal information</p><h2>Complete your profile</h2><p>These details are used only for your attendance account and the back of your ID.</p></div>
+          <div class="two-fields">
+            <label class="field"><span>Date of birth</span><input type="date" id="profile-birth-date" required></label>
+            <label class="field"><span>Phone number</span><input type="tel" id="profile-phone" autocomplete="tel" maxlength="30" required></label>
+          </div>
+          <label class="field"><span>Complete address</span><textarea id="profile-address" rows="3" maxlength="300" required></textarea></label>
+          <div class="two-fields">
+            <label class="field"><span>Person in case of emergency</span><input id="profile-emergency-name" maxlength="150" required></label>
+            <label class="field"><span>Emergency contact number</span><input type="tel" id="profile-emergency-phone" maxlength="30" required></label>
+          </div>
+          <label class="field"><span>2×2 ID photo</span><input type="file" id="profile-photo" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG or WebP · maximum 5 MB</small></label>
+          <label class="privacy-check"><input type="checkbox" id="profile-privacy" required><span>I have read the <a href="privacy.html" target="_blank" rel="noopener">attendance privacy notice</a> and confirm these details are correct.</span></label>
+          <button class="button button--primary" type="submit">Save profile</button>
+          <div class="status" id="profile-status" hidden role="alert"></div>
+        </form>
+
+        <section class="panel portal-id-tools">
+          <div><p class="eyebrow">Attendance identification</p><h2>My front-and-back A6 ID</h2><p>Update your profile before saving or downloading the final ID.</p></div>
+          <div class="toolbar">
+            <button class="button button--secondary button--small" id="save-id-copy" type="button">Save ID copy</button>
+            <button class="button button--quiet button--small" id="download-id-pair" type="button">Download front &amp; back</button>
+            <button class="button button--quiet button--small" id="print-id-pair" type="button">Print ID</button>
+          </div>
+          <div class="status" id="id-status" hidden role="status"></div>
+        </section>
+      </div>
+
+      <section class="portal-id-preview" id="portal-id-preview" aria-label="Front and back student attendance ID"></section>
+
+      <section class="panel student-own-report no-print">
+        <div class="report-heading">
+          <div><p class="eyebrow">Attendance history</p><h2>My attended activities</h2><p>Time In and Time Out are shown using Philippine time.</p></div>
+          <button class="button button--secondary" id="download-own-report" type="button">Download Excel report</button>
+        </div>
+        <div class="report-stat-row"><div class="report-stat"><strong id="own-event-count">0</strong><span>attendance sessions</span></div><div class="report-stat"><strong id="own-total-time">00:00:00</strong><span>total recorded time</span></div></div>
+        <div class="report-table-wrap"><table class="report-table"><thead><tr><th>Activity</th><th>Date</th><th>Time In</th><th>Time Out</th><th>Total</th></tr></thead><tbody id="own-report-body"></tbody></table></div>
+        <p class="report-empty" id="own-report-empty">No attendance has been recorded yet.</p>
+        <div class="status" id="own-report-status" hidden role="status"></div>
+      </section>
+    </section>
+  </main>
+  <footer class="site-footer no-print">Palawan State University – Balabac Campus · University Student Government</footer>
+</body>
+</html>

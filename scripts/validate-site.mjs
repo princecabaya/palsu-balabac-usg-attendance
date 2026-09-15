@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import vm from "node:vm";
 
 const root = process.cwd();
-const htmlFiles = ["index.html", "scanner.html", "generator.html", "dashboard.html", "reports.html"];
+const htmlFiles = ["index.html", "scanner.html", "generator.html", "dashboard.html", "reports.html", "portal.html", "students.html", "privacy.html"];
 const jsFiles = [
   "assets/js/config.js",
   "assets/js/api.js",
@@ -14,6 +14,11 @@ const jsFiles = [
   "assets/js/generator.js",
   "assets/js/dashboard.js",
   "assets/js/reports.js",
+  "assets/js/supabase-attendance-api.js",
+  "assets/js/supabase-client.js",
+  "assets/js/id-card.js",
+  "assets/js/portal.js",
+  "assets/js/students.js",
 ];
 
 const errors = [];
