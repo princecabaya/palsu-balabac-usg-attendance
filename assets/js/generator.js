@@ -1,7 +1,7 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
-import { renderStudentIdPair } from "./id-card.js?v=20260915.6";
+import { renderStudentIdPair } from "./id-card.js?v=20260915.7";
 import { normalizeProgram } from "./qr-payload.js";
-import { getOwnProfile, getSession, listStudents, privateAssetUrls, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js";
+import { getOwnProfile, getSession, listStudents, privateAssetUrls, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js?v=20260915.7";
 
 const elements = {
   login: document.querySelector("#generator-login"),

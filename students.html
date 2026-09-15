@@ -8,11 +8,11 @@
   <meta name="description" content="USG administrator student enrollment and account management.">
   <title>Student Accounts | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.3">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.7">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/students.js?v=20260915.3"></script>
+  <script type="module" src="assets/js/students.js?v=20260915.7"></script>
 </head>
 <body>
   <header class="site-header">
@@ -110,6 +110,18 @@
       </section>
     </section>
   </main>
+  <dialog class="dialog student-name-dialog" id="student-name-dialog">
+    <form id="student-name-form">
+      <p class="eyebrow">Student record correction</p>
+      <h2>Correct student name</h2>
+      <p>Corrections update the student portal, ID Generator and attendance reports. The change is recorded in the administrator audit log.</p>
+      <label class="field"><span>Student number</span><input id="correct-student-number" readonly></label>
+      <div class="two-fields"><label class="field"><span>First name</span><input id="correct-first-name" required maxlength="80"></label><label class="field"><span>Middle name or initial</span><input id="correct-middle-name" maxlength="80"></label></div>
+      <div class="two-fields"><label class="field"><span>Last name</span><input id="correct-last-name" required maxlength="80"></label><label class="field"><span>Suffix</span><input id="correct-suffix" maxlength="20" placeholder="Jr., III"></label></div>
+      <div class="status" id="name-correction-status" hidden role="alert"></div>
+      <div class="toolbar"><button class="button button--quiet" id="cancel-name-correction" type="button">Cancel</button><button class="button button--primary" type="submit">Save corrected name</button></div>
+    </form>
+  </dialog>
   <footer class="site-footer">Palawan State University – Balabac Campus · University Student Government</footer>
 </body>
 </html>

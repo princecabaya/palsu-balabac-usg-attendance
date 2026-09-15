@@ -1,5 +1,5 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
-import { administerStudent, getOwnProfile, getSession, listStudents, normalizeStudentNumber, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js";
+import { administerStudent, getOwnProfile, getSession, listStudents, normalizeStudentNumber, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js?v=20260915.7";
 import { parseRosterFile } from "./roster-import.js";
 import { parseHistoricalAttendanceFile } from "./attendance-import.js?v=20260915.3";
 
@@ -10,6 +10,7 @@ const elements = {
   bulkFile: document.querySelector("#bulk-roster-file"), reviewBulk: document.querySelector("#review-bulk-roster"), bulkStatus: document.querySelector("#bulk-roster-status"), bulkReview: document.querySelector("#bulk-review"), bulkSummary: document.querySelector("#bulk-summary"), bulkWarningConfirm: document.querySelector("#bulk-warning-confirm"), confirmWarnings: document.querySelector("#confirm-bulk-warnings"), bulkProgressWrap: document.querySelector("#bulk-progress-wrap"), bulkProgress: document.querySelector("#bulk-progress"), bulkProgressLabel: document.querySelector("#bulk-progress-label"), startBulk: document.querySelector("#start-bulk-enrollment"), downloadBulkCredentials: document.querySelector("#download-bulk-credentials"), downloadRosterTemplate: document.querySelector("#download-roster-template"), bulkPreviewBody: document.querySelector("#bulk-preview-body"),
   historicalFile: document.querySelector("#historical-attendance-file"), reviewHistorical: document.querySelector("#review-historical-attendance"), historicalStatus: document.querySelector("#historical-attendance-status"), historicalReview: document.querySelector("#historical-attendance-review"), historicalSummary: document.querySelector("#historical-attendance-summary"), historicalEventPreview: document.querySelector("#historical-event-preview"), historicalCorrections: document.querySelector("#historical-corrections"), historicalCorrectionsBody: document.querySelector("#historical-corrections-body"), confirmHistorical: document.querySelector("#confirm-historical-attendance"), importHistorical: document.querySelector("#import-historical-attendance"),
   search: document.querySelector("#student-directory-search"), refresh: document.querySelector("#refresh-students"), body: document.querySelector("#student-directory-body"), directoryStatus: document.querySelector("#student-directory-status"),
+  correctionDialog: document.querySelector("#student-name-dialog"), correctionForm: document.querySelector("#student-name-form"), correctionNumber: document.querySelector("#correct-student-number"), correctionFirst: document.querySelector("#correct-first-name"), correctionMiddle: document.querySelector("#correct-middle-name"), correctionLast: document.querySelector("#correct-last-name"), correctionSuffix: document.querySelector("#correct-suffix"), correctionCancel: document.querySelector("#cancel-name-correction"), correctionStatus: document.querySelector("#name-correction-status"),
 };
 
 let students = [];
@@ -37,6 +38,8 @@ elements.reviewHistorical.addEventListener("click", reviewHistoricalAttendance);
 elements.historicalFile.addEventListener("change", reviewHistoricalAttendance);
 elements.confirmHistorical.addEventListener("change", () => { elements.importHistorical.disabled = !elements.confirmHistorical.checked || !historicalAttendance; });
 elements.importHistorical.addEventListener("click", importHistoricalAttendance);
+elements.correctionForm.addEventListener("submit", saveNameCorrection);
+elements.correctionCancel.addEventListener("click", () => elements.correctionDialog.close());
 restore();
 
 async function restore() {
@@ -149,7 +152,7 @@ function renderBulkReview() {
 }
 
 function bulkRowMarkup(row, index) {
-  const name = [row.firstName, row.middleName, row.lastName].filter(Boolean).join(" ");
+  const name = profileDisplayName({ first_name: row.firstName, middle_name: row.middleName, last_name: row.lastName });
   return `<tr data-bulk-index="${index}"><td>${row.rowNumber}</td><td><strong>${escapeHtml(name)}</strong><small>${escapeHtml(row.studentNumber)}</small></td><td>${escapeHtml(row.program || "—")}</td><td class="bulk-row-status">${bulkStatusMarkup(row)}</td></tr>`;
 }
 
@@ -218,7 +221,7 @@ async function startBulkEnrollment() {
         bulkCredentials.push({
           username: result.username,
           temporaryPassword: result.temporaryPassword,
-          name: [item.row.firstName, item.row.middleName, item.row.lastName].filter(Boolean).join(" "),
+          name: profileDisplayName({ first_name: item.row.firstName, middle_name: item.row.middleName, last_name: item.row.lastName }),
           program: item.row.program,
         });
       } catch (error) {
@@ -367,7 +370,7 @@ function renderStudents() {
   const matches = students.filter((student) => `${profileDisplayName(student)} ${student.student_number}`.toLowerCase().includes(query));
   elements.body.innerHTML = matches.map((student) => {
     const profileComplete = Boolean(student.privacy_notice_accepted_at && student.photo_path);
-    return `<tr><td><strong>${escapeHtml(profileDisplayName(student))}</strong><small>${escapeHtml(student.student_number)}</small></td><td>${escapeHtml(student.program)}</td><td><span class="status-tag ${student.account_status === "inactive" ? "status-tag--ended" : ""}">${escapeHtml(student.account_status)}</span><small>${student.must_change_password ? "Password change required" : "Password activated"}</small></td><td>${profileComplete ? "Complete" : "Incomplete"}</td><td><div class="account-actions"><button class="button button--quiet button--small" data-action="resetPassword" data-student="${escapeHtml(student.student_number)}" type="button">Reset password</button><button class="button ${student.account_status === "inactive" ? "button--secondary" : "button--danger"} button--small" data-action="${student.account_status === "inactive" ? "reactivate" : "deactivate"}" data-student="${escapeHtml(student.student_number)}" type="button">${student.account_status === "inactive" ? "Reactivate" : "Deactivate"}</button></div></td></tr>`;
+    return `<tr><td><strong>${escapeHtml(profileDisplayName(student))}</strong><small>${escapeHtml(student.student_number)}</small></td><td>${escapeHtml(student.program)}</td><td><span class="status-tag ${student.account_status === "inactive" ? "status-tag--ended" : ""}">${escapeHtml(student.account_status)}</span><small>${student.must_change_password ? "Password change required" : "Password activated"}</small></td><td>${profileComplete ? "Complete" : "Incomplete"}</td><td><div class="account-actions"><button class="button button--secondary button--small" data-action="correctName" data-student="${escapeHtml(student.student_number)}" type="button">Correct name</button><button class="button button--quiet button--small" data-action="resetPassword" data-student="${escapeHtml(student.student_number)}" type="button">Reset password</button><button class="button ${student.account_status === "inactive" ? "button--secondary" : "button--danger"} button--small" data-action="${student.account_status === "inactive" ? "reactivate" : "deactivate"}" data-student="${escapeHtml(student.student_number)}" type="button">${student.account_status === "inactive" ? "Reactivate" : "Deactivate"}</button></div></td></tr>`;
   }).join("") || '<tr><td colspan="5">No students match the current search.</td></tr>';
 }
 
@@ -376,6 +379,10 @@ async function handleStudentAction(event) {
   if (!button) return;
   const action = button.dataset.action;
   const number = button.dataset.student;
+  if (action === "correctName") {
+    openNameCorrection(number);
+    return;
+  }
   const prompt = action === "resetPassword" ? `Reset the password for ${number}? The previous password will immediately stop working.` : `${action === "deactivate" ? "Deactivate" : "Reactivate"} ${number}?`;
   if (!window.confirm(prompt)) return;
   busy(button, true, "Working…");
@@ -387,6 +394,42 @@ async function handleStudentAction(event) {
     setStatus(elements.directoryStatus, error.message, "error");
   } finally {
     busy(button, false, action === "resetPassword" ? "Reset password" : action === "deactivate" ? "Deactivate" : "Reactivate");
+  }
+}
+
+function openNameCorrection(studentNumber) {
+  const student = students.find((item) => item.student_number === studentNumber);
+  if (!student) return;
+  elements.correctionNumber.value = student.student_number;
+  elements.correctionFirst.value = student.first_name || "";
+  elements.correctionMiddle.value = student.middle_name || "";
+  elements.correctionLast.value = student.last_name || "";
+  elements.correctionSuffix.value = student.suffix || "";
+  clearStatus(elements.correctionStatus);
+  elements.correctionDialog.showModal();
+}
+
+async function saveNameCorrection(event) {
+  event.preventDefault();
+  const button = event.submitter;
+  busy(button, true, "Saving correction…");
+  clearStatus(elements.correctionStatus);
+  try {
+    await administerStudent({
+      action: "correctName",
+      studentNumber: elements.correctionNumber.value,
+      firstName: elements.correctionFirst.value,
+      middleName: elements.correctionMiddle.value,
+      lastName: elements.correctionLast.value,
+      suffix: elements.correctionSuffix.value,
+    });
+    elements.correctionDialog.close();
+    await loadStudents();
+    setStatus(elements.directoryStatus, `The name for ${elements.correctionNumber.value} was corrected.`, "success");
+  } catch (error) {
+    setStatus(elements.correctionStatus, error.message, "error");
+  } finally {
+    busy(button, false, "Save corrected name");
   }
 }
 

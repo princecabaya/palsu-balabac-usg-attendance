@@ -85,6 +85,16 @@ test("administrator enrollment shows temporary credentials once and resets rathe
   assert.match(studentsPage, /Enroll a complete roster/);
 });
 
+test("administrators can correct misspelled student names with an audit trail", () => {
+  assert.match(studentsPage, /id="student-name-dialog"/);
+  assert.match(studentsSource, /Correct name/);
+  assert.match(studentsSource, /action:\s*"correctName"/);
+  assert.match(adminFunction, /action === "correctName"/);
+  assert.match(adminFunction, /student\.name_corrected/);
+  assert.match(adminFunction, /before:/);
+  assert.match(adminFunction, /after:/);
+});
+
 test("database uses RLS, paired attendance, idempotency and audited corrections", () => {
   assert.match(migration, /alter table public\.profiles enable row level security/);
   assert.match(migration, /one_open_attendance_session/);

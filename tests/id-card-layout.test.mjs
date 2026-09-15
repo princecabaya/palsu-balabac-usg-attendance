@@ -32,7 +32,7 @@ test("student ID includes a blank signature line", () => {
   assert.match(idCard, /class="id-signature"/);
   assert.match(idCard, /STUDENT'S SIGNATURE/);
   assert.match(page, /styles\.css\?v=20260915\.4/);
-  assert.match(page, /generator\.js\?v=20260915\.6/);
+  assert.match(page, /generator\.js\?v=20260915\.7/);
 });
 
 test("ID Generator loads enrolled students through Supabase administrator access", () => {

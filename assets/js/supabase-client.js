@@ -169,7 +169,13 @@ export async function administerStudent(body) {
 }
 
 export function profileDisplayName(profile) {
-  return [profile.first_name, profile.middle_name, profile.last_name, profile.suffix].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  return [profile.first_name, formatMiddleName(profile.middle_name), profile.last_name, profile.suffix].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+}
+
+export function formatMiddleName(value) {
+  const middleName = String(value || "").trim().replace(/\s+/g, " ");
+  const initial = middleName.replace(/\.$/, "");
+  return /^[A-Za-zÑñ]$/.test(initial) ? `${initial.toUpperCase()}.` : middleName;
 }
 
 function clean(value, max) {

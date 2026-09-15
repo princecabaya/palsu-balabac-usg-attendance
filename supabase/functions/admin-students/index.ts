@@ -213,8 +213,31 @@ Deno.serve(async (request) => {
       });
     }
 
-    const { data: profile, error: profileError } = await admin.from("profiles").select("id, student_number, account_status").eq("student_number", number).eq("role", "student").single();
+    const { data: profile, error: profileError } = await admin.from("profiles").select("id, student_number, account_status, first_name, middle_name, last_name, suffix").eq("student_number", number).eq("role", "student").single();
     if (profileError || !profile) return json({ error: "Student account not found." }, 404);
+
+    if (action === "correctName") {
+      const firstName = cleanText(body.firstName, 80);
+      const middleName = cleanText(body.middleName, 80);
+      const lastName = cleanText(body.lastName, 80);
+      const suffix = cleanText(body.suffix, 20);
+      if (!firstName || !lastName) return json({ error: "First name and last name are required." }, 400);
+      const corrected = { first_name: firstName, middle_name: middleName || null, last_name: lastName, suffix: suffix || null };
+      const { error } = await admin.from("profiles").update(corrected).eq("id", profile.id);
+      if (error) return json({ error: error.message }, 400);
+      await admin.from("audit_log").insert({
+        actor_id: authData.user.id,
+        action: "student.name_corrected",
+        entity_type: "profile",
+        entity_id: profile.id,
+        details: {
+          studentNumber: number,
+          before: { firstName: profile.first_name, middleName: profile.middle_name, lastName: profile.last_name, suffix: profile.suffix },
+          after: { firstName, middleName: middleName || null, lastName, suffix: suffix || null },
+        },
+      });
+      return json({ ok: true, studentNumber: number });
+    }
 
     if (action === "resetPassword") {
       const password = temporaryPassword();

@@ -1,5 +1,5 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
-import { renderStudentIdPair } from "./id-card.js?v=20260915.2";
+import { renderStudentIdPair } from "./id-card.js?v=20260915.7";
 import { groupAttendanceSessions } from "./attendance-report.js?v=20260915.3";
 import {
   changeStudentPassword,
@@ -13,7 +13,7 @@ import {
   signOut,
   updateStudentProfile,
   uploadStudentPhoto,
-} from "./supabase-client.js";
+} from "./supabase-client.js?v=20260915.7";
 
 const elements = {
   login: document.querySelector("#student-login"), loginForm: document.querySelector("#student-login-form"), username: document.querySelector("#student-username"), password: document.querySelector("#student-password"), loginStatus: document.querySelector("#student-login-status"),

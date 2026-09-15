@@ -1,5 +1,5 @@
 import { buildQrPayload, programLabel } from "./qr-payload.js";
-import { profileDisplayName } from "./supabase-client.js";
+import { profileDisplayName } from "./supabase-client.js?v=20260915.7";
 
 export function renderStudentIdPair(container, profile, photoUrl = "") {
   const name = profileDisplayName(profile).toUpperCase();
