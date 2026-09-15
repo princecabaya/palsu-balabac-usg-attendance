@@ -23,11 +23,8 @@ export function renderStudentIdPair(container, profile, photoUrl = "") {
   const back = document.createElement("article");
   back.className = "student-id student-id--back";
   back.dataset.idSide = "back";
+  back.setAttribute("aria-label", `Back of attendance ID for ${name}`);
   back.innerHTML = `
-    <header class="id-back-header">
-      <span class="id-back-seals"><img src="assets/img/psu-logo.png" alt=""><img src="assets/img/usg-logo.png" alt=""></span>
-      <span><strong>STUDENT INFORMATION</strong><small>PSU Balabac Campus · USG Attendance</small></span>
-    </header>
     <section class="id-back-details">
       ${backRow("Student number", profile.student_number)}
       ${backRow("Date of birth", formatBirthDate(profile.date_of_birth))}
@@ -37,8 +34,7 @@ export function renderStudentIdPair(container, profile, photoUrl = "") {
       ${backRow("Contact person", profile.emergency_contact_name)}
       ${backRow("Contact number", profile.emergency_contact_phone)}
     </section>
-    <div class="id-back-signature"><span></span><small>STUDENT'S SIGNATURE</small></div>
-    <footer class="id-back-footer"><strong>If found, please return to PSU Balabac Campus.</strong><span>This card is intended only for USG event attendance.</span></footer>`;
+    <footer class="id-back-footer"><strong>Kindly return this ID to the owner if found.</strong><span>This is an unofficial ID. Still wear your valid PalSU ID.</span></footer>`;
 
   container.replaceChildren(front, back);
   if (!window.QRCode) throw new Error("The QR generator did not load. Refresh the page.");

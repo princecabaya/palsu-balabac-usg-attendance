@@ -337,25 +337,16 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
 .portal-id-preview { display: grid; grid-template-columns: repeat(2, 105mm); gap: 18px; width: fit-content; max-width: 100%; margin: 1.5rem auto; overflow-x: auto; padding: 0 0 1rem; }
 .student-own-report { margin-top: 1.25rem; }
 
-.student-id--back::before { opacity: 0.62; transform: rotate(180deg); }
-.id-back-header { position: relative; z-index: 2; display: flex; align-items: center; gap: 4mm; height: 32mm; padding: 6mm; color: white; background: linear-gradient(105deg, var(--orange), #ef6b2e 42%, var(--green) 42% 66%, var(--blue) 66%); }
-.id-back-header > span:last-child { display: grid; gap: 1mm; }
-.id-back-header strong { font-size: 4.8mm; letter-spacing: 0.04em; }
-.id-back-header small { font-size: 2.6mm; font-weight: 750; }
-.id-back-seals { display: flex; flex: none; }
-.id-back-seals img { width: 18mm; height: 18mm; padding: 0.8mm; object-fit: contain; background: white; border-radius: 50%; }
-.id-back-seals img + img { margin-left: -4mm; }
-.id-back-details { position: relative; z-index: 2; display: grid; gap: 2.5mm; padding: 8mm 9mm 0; }
-.id-back-row { display: grid; gap: 1mm; min-height: 13mm; padding: 2mm 3mm; background: rgba(255,255,255,0.88); border: 0.35mm solid rgba(24,48,68,0.13); border-radius: 2mm; }
+.student-id--back::before { opacity: 0.82; transform: none; }
+.id-back-details { position: relative; z-index: 2; display: grid; gap: 2mm; padding: 14mm 8mm 25mm; }
+.id-back-row { display: grid; align-content: center; gap: 1mm; min-height: 13mm; padding: 2mm 3mm; background: rgba(255,255,255,0.9); border: 0.35mm solid rgba(24,48,68,0.13); border-radius: 3mm 7mm 3mm 7mm; box-shadow: 0 1mm 2.5mm rgba(24,48,68,0.06); }
 .id-back-row small { color: var(--orange-dark); font-size: 2mm; font-weight: 900; letter-spacing: 0.11em; text-transform: uppercase; }
 .id-back-row strong { overflow-wrap: anywhere; font-size: 3.2mm; line-height: 1.25; }
-.id-back-divider { margin: 1mm 0 0; padding: 1.5mm 3mm; color: white; background: var(--blue-dark); border-radius: 2mm; font-size: 2.4mm; font-weight: 900; letter-spacing: 0.12em; text-align: center; }
-.id-back-signature { position: absolute; z-index: 3; right: 24mm; bottom: 22mm; left: 24mm; display: grid; justify-items: center; gap: 1mm; }
-.id-back-signature span { width: 100%; height: 5mm; border-bottom: 0.45mm solid var(--ink); }
-.id-back-signature small { font-size: 2mm; font-weight: 850; letter-spacing: 0.12em; }
-.id-back-footer { position: absolute; z-index: 3; right: 0; bottom: 0; left: 0; display: grid; gap: 0.7mm; min-height: 15mm; padding: 3mm 8mm; color: white; background: linear-gradient(100deg, var(--orange), var(--blue)); text-align: center; }
-.id-back-footer strong { font-size: 2.5mm; }
-.id-back-footer span { font-size: 2mm; }
+.id-back-divider { margin: 0.5mm 0; padding: 1.7mm 3mm; color: white; background: linear-gradient(100deg, var(--orange), var(--green) 54%, var(--blue)); border-radius: 99mm; box-shadow: 0 1mm 2.5mm rgba(24,48,68,0.12); font-size: 2.4mm; font-weight: 900; letter-spacing: 0.12em; text-align: center; }
+.id-back-footer { position: absolute; z-index: 3; right: 7mm; bottom: 5.5mm; left: 7mm; display: grid; gap: 0.8mm; min-height: 14mm; padding: 2.5mm 5mm; color: var(--ink); background: rgba(255,255,255,0.91); border: 0.4mm solid rgba(255,255,255,0.96); border-radius: 8mm 3mm 8mm 3mm; box-shadow: 0 1.5mm 4mm rgba(24,48,68,0.15); text-align: center; }
+.id-back-footer::before { content: ""; position: absolute; top: 0; right: 7mm; left: 7mm; height: 0.8mm; background: linear-gradient(90deg, var(--orange) 0 34%, var(--green) 34% 66%, var(--blue) 66%); border-radius: 99mm; }
+.id-back-footer strong { color: var(--orange-dark); font-size: 2.5mm; }
+.id-back-footer span { font-size: 2.15mm; font-weight: 700; }
 
 /* Student account administration */
 .student-admin-page > .section-heading { margin-bottom: 1.5rem; }

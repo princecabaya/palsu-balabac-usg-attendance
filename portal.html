@@ -8,14 +8,15 @@
   <meta name="description" content="Private PSU Balabac USG student attendance portal.">
   <title>Student Portal | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.1">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260915.2">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/portal.js?v=20260915.1"></script>
+  <script type="module" src="assets/js/portal.js?v=20260915.2"></script>
 </head>
 <body class="portal-body">
   <header class="site-header no-print">
@@ -91,6 +92,7 @@
           <div class="toolbar">
             <button class="button button--secondary button--small" id="save-id-copy" type="button">Save ID copy</button>
             <button class="button button--quiet button--small" id="download-id-pair" type="button">Download front &amp; back</button>
+            <button class="button button--primary button--small" id="download-id-pdf" type="button">Generate A4 PDF</button>
             <button class="button button--quiet button--small" id="print-id-pair" type="button">Print ID</button>
           </div>
           <div class="status" id="id-status" hidden role="status"></div>

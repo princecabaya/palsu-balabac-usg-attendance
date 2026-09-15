@@ -5,6 +5,7 @@ import fs from "node:fs";
 const config = fs.readFileSync(new URL("../assets/js/config.js", import.meta.url), "utf8");
 const portal = fs.readFileSync(new URL("../portal.html", import.meta.url), "utf8");
 const portalSource = fs.readFileSync(new URL("../assets/js/portal.js", import.meta.url), "utf8");
+const idCardSource = fs.readFileSync(new URL("../assets/js/id-card.js", import.meta.url), "utf8");
 const studentsPage = fs.readFileSync(new URL("../students.html", import.meta.url), "utf8");
 const studentsSource = fs.readFileSync(new URL("../assets/js/students.js", import.meta.url), "utf8");
 const client = fs.readFileSync(new URL("../assets/js/supabase-client.js", import.meta.url), "utf8");
@@ -36,6 +37,22 @@ test("student profile collects requested back-of-ID and emergency fields", () =>
   assert.match(portalSource, /renderStudentIdPair/);
   assert.match(portalSource, /saveStudentIdCopy\("front"/);
   assert.match(portalSource, /saveStudentIdCopy\("back"/);
+});
+
+test("back of ID is headerless, signature-free and carries the required return notice", () => {
+  assert.doesNotMatch(idCardSource, /id-back-header|id-back-signature/);
+  assert.match(idCardSource, /Kindly return this ID to the owner if found\./);
+  assert.match(idCardSource, /This is an unofficial ID\. Still wear your valid PalSU ID\./);
+});
+
+test("students can generate an A4 PDF with front in Q2 and back in Q1", () => {
+  assert.match(portal, /jspdf\/2\.5\.2\/jspdf\.umd\.min\.js/);
+  assert.match(portal, /id="download-id-pdf"/);
+  assert.match(portalSource, /new JsPdf\(\{ orientation: "portrait", unit: "mm", format: "a4"/);
+  assert.match(portalSource, /quadrantWidth\s*=\s*105/);
+  assert.match(portalSource, /quadrantHeight\s*=\s*148\.5/);
+  assert.match(portalSource, /addImage\(frontCanvas[^\n]*0, 0, quadrantWidth, quadrantHeight/);
+  assert.match(portalSource, /addImage\(backCanvas[^\n]*quadrantWidth, 0, quadrantWidth, quadrantHeight/);
 });
 
 test("students can download a real Excel attendance report", () => {

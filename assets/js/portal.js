@@ -1,5 +1,5 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
-import { renderStudentIdPair } from "./id-card.js";
+import { renderStudentIdPair } from "./id-card.js?v=20260915.2";
 import {
   changeStudentPassword,
   getOwnProfile,
@@ -19,7 +19,7 @@ const elements = {
   passwordPanel: document.querySelector("#password-change"), passwordForm: document.querySelector("#password-change-form"), newPassword: document.querySelector("#new-password"), confirmPassword: document.querySelector("#confirm-password"), passwordStatus: document.querySelector("#password-change-status"),
   account: document.querySelector("#student-account"), logout: document.querySelector("#portal-logout"), name: document.querySelector("#account-student-name"), meta: document.querySelector("#account-student-meta"), accountStatus: document.querySelector("#account-status"),
   profileForm: document.querySelector("#student-profile-form"), birthDate: document.querySelector("#profile-birth-date"), address: document.querySelector("#profile-address"), phone: document.querySelector("#profile-phone"), emergencyName: document.querySelector("#profile-emergency-name"), emergencyPhone: document.querySelector("#profile-emergency-phone"), photo: document.querySelector("#profile-photo"), privacy: document.querySelector("#profile-privacy"), profileStatus: document.querySelector("#profile-status"),
-  idPreview: document.querySelector("#portal-id-preview"), saveId: document.querySelector("#save-id-copy"), downloadId: document.querySelector("#download-id-pair"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
+  idPreview: document.querySelector("#portal-id-preview"), saveId: document.querySelector("#save-id-copy"), downloadId: document.querySelector("#download-id-pair"), pdfId: document.querySelector("#download-id-pdf"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
   reportBody: document.querySelector("#own-report-body"), reportEmpty: document.querySelector("#own-report-empty"), eventCount: document.querySelector("#own-event-count"), totalTime: document.querySelector("#own-total-time"), downloadReport: document.querySelector("#download-own-report"), reportStatus: document.querySelector("#own-report-status"),
 };
 
@@ -34,6 +34,7 @@ elements.profileForm.addEventListener("submit", handleProfileSave);
 elements.logout.addEventListener("click", () => logout());
 elements.saveId.addEventListener("click", saveIdCopies);
 elements.downloadId.addEventListener("click", downloadIdPair);
+elements.pdfId.addEventListener("click", downloadIdPdf);
 elements.printId.addEventListener("click", printIdPair);
 elements.downloadReport.addEventListener("click", downloadExcelReport);
 
@@ -140,10 +141,14 @@ async function handleProfileSave(event) {
   }
 }
 
-async function cardBlob(card) {
+async function cardCanvas(card) {
   if (!window.html2canvas) throw new Error("The ID export library did not load.");
   if (document.fonts?.ready) await document.fonts.ready;
-  const canvas = await window.html2canvas(card, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
+  return window.html2canvas(card, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
+}
+
+async function cardBlob(card) {
+  const canvas = await cardCanvas(card);
   return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("The ID image could not be created.")), "image/png"));
 }
 
@@ -178,6 +183,42 @@ async function downloadIdPair() {
     setStatus(elements.idStatus, error.message, "error");
   } finally {
     setBusy(elements.downloadId, false, "Download front & back");
+  }
+}
+
+async function downloadIdPdf() {
+  if (!idCards) return;
+  setBusy(elements.pdfId, true, "Generating A4 PDF…");
+  clearStatus(elements.idStatus);
+  try {
+    const JsPdf = window.jspdf?.jsPDF;
+    if (!JsPdf) throw new Error("The PDF export library did not load. Refresh the page and try again.");
+    const [frontCanvas, backCanvas] = await Promise.all([cardCanvas(idCards.front), cardCanvas(idCards.back)]);
+    const pdf = new JsPdf({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+    const quadrantWidth = 105;
+    const quadrantHeight = 148.5;
+
+    // Cartesian-style placement: front in Q2 (upper-left), back in Q1 (upper-right).
+    pdf.addImage(frontCanvas, "PNG", 0, 0, quadrantWidth, quadrantHeight, "id-front", "FAST");
+    pdf.addImage(backCanvas, "PNG", quadrantWidth, 0, quadrantWidth, quadrantHeight, "id-back", "FAST");
+
+    // Light guides divide the A4 sheet into four equal cutting quadrants.
+    pdf.setDrawColor(185, 194, 201);
+    pdf.setLineWidth(0.2);
+    pdf.setLineDashPattern([2, 2], 0);
+    pdf.line(quadrantWidth, 0, quadrantWidth, 297);
+    pdf.line(0, quadrantHeight, 210, quadrantHeight);
+    pdf.setProperties({
+      title: `PSU Balabac USG Attendance ID - ${profile.student_number}`,
+      subject: "Front and back A6 attendance ID on an A4 sheet",
+      author: "PSU Balabac Campus - University Student Government",
+    });
+    pdf.save(`PSU-USG-ID-${profile.student_number}-A4.pdf`);
+    setStatus(elements.idStatus, "A4 PDF generated: front in Q2, back in Q1, with two blank lower quadrants.", "success");
+  } catch (error) {
+    setStatus(elements.idStatus, error.message, "error");
+  } finally {
+    setBusy(elements.pdfId, false, "Generate A4 PDF");
   }
 }
 
