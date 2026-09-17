@@ -22,7 +22,7 @@ const elements = {
   passwordPanel: document.querySelector("#password-change"), passwordForm: document.querySelector("#password-change-form"), newPassword: document.querySelector("#new-password"), confirmPassword: document.querySelector("#confirm-password"), passwordStatus: document.querySelector("#password-change-status"),
   account: document.querySelector("#student-account"), logout: document.querySelector("#portal-logout"), name: document.querySelector("#account-student-name"), meta: document.querySelector("#account-student-meta"), accountStatus: document.querySelector("#account-status"),
   profileForm: document.querySelector("#student-profile-form"), birthDate: document.querySelector("#profile-birth-date"), address: document.querySelector("#profile-address"), addressMode: document.querySelector("#profile-address-mode"), guidedAddress: document.querySelector("#profile-balabac-address"), barangay: document.querySelector("#profile-address-barangay"), addressDetail: document.querySelector("#profile-address-detail"), manualAddressField: document.querySelector("#profile-manual-address-field"), manualAddress: document.querySelector("#profile-address-manual"), addressPreview: document.querySelector("#profile-address-preview strong"), phone: document.querySelector("#profile-phone"), emergencyName: document.querySelector("#profile-emergency-name"), emergencyPhone: document.querySelector("#profile-emergency-phone"), photo: document.querySelector("#profile-photo"), privacy: document.querySelector("#profile-privacy"), profileStatus: document.querySelector("#profile-status"),
-  idPreview: document.querySelector("#portal-id-preview"), saveId: document.querySelector("#save-id-copy"), downloadId: document.querySelector("#download-id-pair"), pdfId: document.querySelector("#download-id-pdf"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
+  idPreview: document.querySelector("#portal-id-preview"), saveId: document.querySelector("#save-id-copy"), downloadFront: document.querySelector("#download-id-front"), downloadBack: document.querySelector("#download-id-back"), pdfId: document.querySelector("#download-id-pdf"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
   reportBody: document.querySelector("#own-report-body"), reportEmpty: document.querySelector("#own-report-empty"), eventCount: document.querySelector("#own-event-count"), totalTime: document.querySelector("#own-total-time"), downloadReport: document.querySelector("#download-own-report"), reportStatus: document.querySelector("#own-report-status"),
 };
 
@@ -42,7 +42,8 @@ elements.passwordForm.addEventListener("submit", handlePasswordChange);
 elements.profileForm.addEventListener("submit", handleProfileSave);
 elements.logout.addEventListener("click", () => logout());
 elements.saveId.addEventListener("click", saveIdCopies);
-elements.downloadId.addEventListener("click", downloadIdPair);
+elements.downloadFront.addEventListener("click", () => downloadIdSide("front"));
+elements.downloadBack.addEventListener("click", () => downloadIdSide("back"));
 elements.pdfId.addEventListener("click", downloadIdPdf);
 elements.printId.addEventListener("click", printIdPair);
 elements.downloadReport.addEventListener("click", downloadExcelReport);
@@ -194,21 +195,20 @@ async function saveIdCopies() {
   }
 }
 
-async function downloadIdPair() {
-  if (!idCards || !window.JSZip) return;
-  setBusy(elements.downloadId, true, "Preparing…");
+async function downloadIdSide(side) {
+  if (!idCards?.[side]) return;
+  const button = side === "front" ? elements.downloadFront : elements.downloadBack;
+  const originalLabel = side === "front" ? "Download front PNG" : "Download back PNG";
+  setBusy(button, true, "Preparing PNG…");
   clearStatus(elements.idStatus);
   try {
-    const zip = new window.JSZip();
-    const [front, back] = await Promise.all([captureIdCardBlob(idCards.front), captureIdCardBlob(idCards.back)]);
-    zip.file(`PSU-USG-ID-${profile.student_number}-FRONT.png`, front);
-    zip.file(`PSU-USG-ID-${profile.student_number}-BACK.png`, back);
-    const archive = await zip.generateAsync({ type: "blob" });
-    downloadBlob(archive, `PSU-USG-ID-${profile.student_number}.zip`);
+    const image = await captureIdCardBlob(idCards[side]);
+    downloadBlob(image, `PSU-USG-ID-${profile.student_number}-${side.toUpperCase()}.png`);
+    setStatus(elements.idStatus, `${side === "front" ? "Front" : "Back"} ID downloaded as a full-quality PNG.`, "success");
   } catch (error) {
     setStatus(elements.idStatus, error.message, "error");
   } finally {
-    setBusy(elements.downloadId, false, "Download front & back");
+    setBusy(button, false, originalLabel);
   }
 }
 

@@ -13,10 +13,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/portal.js?v=20260917.4"></script>
+  <script type="module" src="assets/js/portal.js?v=20260917.5"></script>
 </head>
 <body class="portal-body">
   <header class="site-header no-print">
@@ -104,7 +103,8 @@
           <div><p class="eyebrow">Attendance identification</p><h2>My front-and-back A6 ID</h2><p>Update your profile before saving or downloading the final ID.</p></div>
           <div class="toolbar">
             <button class="button button--secondary button--small" id="save-id-copy" type="button">Save ID copy</button>
-            <button class="button button--quiet button--small" id="download-id-pair" type="button">Download front &amp; back</button>
+            <button class="button button--quiet button--small" id="download-id-front" type="button">Download front PNG</button>
+            <button class="button button--quiet button--small" id="download-id-back" type="button">Download back PNG</button>
             <button class="button button--primary button--small" id="download-id-pdf" type="button">Generate A4 PDF</button>
             <button class="button button--quiet button--small" id="print-id-pair" type="button">Print ID</button>
           </div>

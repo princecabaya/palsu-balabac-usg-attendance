@@ -72,6 +72,17 @@ test("students can generate an A4 PDF with front in Q2 and back in Q1", () => {
   assert.match(portalSource, /addImage\(backCanvas[^\n]*quadrantWidth, 0, quadrantWidth, quadrantHeight/);
 });
 
+test("students download the front and back ID as separate PNG files without ZIP", () => {
+  assert.match(portal, /id="download-id-front"/);
+  assert.match(portal, /id="download-id-back"/);
+  assert.doesNotMatch(portal, /jszip/i);
+  assert.match(portalSource, /downloadIdSide\("front"\)/);
+  assert.match(portalSource, /downloadIdSide\("back"\)/);
+  assert.match(portalSource, /captureIdCardBlob\(idCards\[side\]\)/);
+  assert.match(portalSource, /side\.toUpperCase\(\)\}\.png/);
+  assert.doesNotMatch(portalSource, /JSZip|\.zip\b/);
+});
+
 test("students can download a real Excel attendance report", () => {
   assert.match(portal, /exceljs\/4\.4\.0\/exceljs\.min\.js/);
   assert.match(portal, /id="download-own-report"/);
