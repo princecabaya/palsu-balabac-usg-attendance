@@ -21,6 +21,7 @@ const elements = {
   login: document.querySelector("#student-login"), loginForm: document.querySelector("#student-login-form"), username: document.querySelector("#student-username"), password: document.querySelector("#student-password"), loginStatus: document.querySelector("#student-login-status"),
   passwordPanel: document.querySelector("#password-change"), passwordForm: document.querySelector("#password-change-form"), newPassword: document.querySelector("#new-password"), confirmPassword: document.querySelector("#confirm-password"), passwordStatus: document.querySelector("#password-change-status"),
   account: document.querySelector("#student-account"), logout: document.querySelector("#portal-logout"), name: document.querySelector("#account-student-name"), meta: document.querySelector("#account-student-meta"), accountStatus: document.querySelector("#account-status"),
+  previewBanner: document.querySelector("#portal-preview-banner"),
   profileForm: document.querySelector("#student-profile-form"), birthDate: document.querySelector("#profile-birth-date"), address: document.querySelector("#profile-address"), addressMode: document.querySelector("#profile-address-mode"), guidedAddress: document.querySelector("#profile-balabac-address"), barangay: document.querySelector("#profile-address-barangay"), addressDetail: document.querySelector("#profile-address-detail"), manualAddressField: document.querySelector("#profile-manual-address-field"), manualAddress: document.querySelector("#profile-address-manual"), addressPreview: document.querySelector("#profile-address-preview strong"), phone: document.querySelector("#profile-phone"), emergencyName: document.querySelector("#profile-emergency-name"), emergencyPhone: document.querySelector("#profile-emergency-phone"), photo: document.querySelector("#profile-photo"), privacy: document.querySelector("#profile-privacy"), profileStatus: document.querySelector("#profile-status"),
   idPreview: document.querySelector("#portal-id-preview"), saveId: document.querySelector("#save-id-copy"), downloadFront: document.querySelector("#download-id-front"), downloadBack: document.querySelector("#download-id-back"), pdfId: document.querySelector("#download-id-pdf"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
   reportBody: document.querySelector("#own-report-body"), reportEmpty: document.querySelector("#own-report-empty"), eventCount: document.querySelector("#own-event-count"), totalTime: document.querySelector("#own-total-time"), downloadReport: document.querySelector("#download-own-report"), reportStatus: document.querySelector("#own-report-status"),
@@ -30,6 +31,7 @@ let profile;
 let photoUrl = "";
 let idCards;
 let attendance = [];
+const previewMode = new URLSearchParams(window.location.search).get("preview") === "interface";
 
 BALABAC_BARANGAYS.forEach((barangay) => elements.barangay.add(new Option(barangay, barangay)));
 elements.addressMode.addEventListener("change", syncAddressEditor);
@@ -48,7 +50,37 @@ elements.pdfId.addEventListener("click", downloadIdPdf);
 elements.printId.addEventListener("click", printIdPair);
 elements.downloadReport.addEventListener("click", downloadExcelReport);
 
-restoreAccount();
+if (previewMode) openInterfacePreview();
+else restoreAccount();
+
+async function openInterfacePreview() {
+  document.body.classList.add("portal-preview-mode");
+  profile = {
+    role: "student",
+    account_status: "Interface preview",
+    student_number: "2026-10-0000BL",
+    first_name: "Sample",
+    middle_name: "A",
+    last_name: "Student",
+    suffix: "",
+    program: "BEEd",
+    date_of_birth: "2005-01-15",
+    address: "Purok 1, Barangay Poblacion VI, Balabac, Palawan",
+    phone: "09XX XXX XXXX",
+    emergency_contact_name: "Sample Contact Person",
+    emergency_contact_phone: "09XX XXX XXXX",
+    privacy_notice_accepted_at: new Date().toISOString(),
+    photo_path: null,
+  };
+  elements.login.hidden = true;
+  elements.passwordPanel.hidden = true;
+  elements.logout.hidden = true;
+  elements.account.hidden = false;
+  elements.previewBanner.hidden = false;
+  await renderAccount();
+  elements.profileForm.querySelectorAll("input, select, textarea, button").forEach((control) => { control.disabled = true; });
+  [elements.saveId, elements.downloadFront, elements.downloadBack, elements.pdfId, elements.printId, elements.downloadReport].forEach((button) => { button.disabled = true; });
+}
 
 async function restoreAccount() {
   try {
@@ -121,9 +153,22 @@ async function renderAccount() {
   elements.emergencyName.value = profile.emergency_contact_name || "";
   elements.emergencyPhone.value = profile.emergency_contact_phone || "";
   elements.privacy.checked = Boolean(profile.privacy_notice_accepted_at);
-  photoUrl = profile.photo_path ? await privateAssetUrl("student-photos", profile.photo_path) : "";
+  photoUrl = !previewMode && profile.photo_path ? await privateAssetUrl("student-photos", profile.photo_path) : "";
   idCards = renderStudentIdPair(elements.idPreview, profile, photoUrl);
-  await loadAttendance();
+  if (previewMode) {
+    attendance = [{
+      event_name: "Sample USG Activity",
+      venue: "PSU Balabac Campus",
+      first_time_in: "2026-09-15T00:00:00.000Z",
+      first_time_out: "2026-09-15T02:30:00.000Z",
+      second_time_in: null,
+      second_time_out: null,
+      total_seconds: 9000,
+    }];
+    renderAttendance();
+  } else {
+    await loadAttendance();
+  }
 }
 
 async function handleProfileSave(event) {
@@ -258,14 +303,18 @@ async function loadAttendance() {
   clearStatus(elements.reportStatus);
   try {
     attendance = groupAttendanceSessions(await ownAttendanceReport());
-    const seconds = attendance.reduce((sum, row) => sum + Number(row.total_seconds || 0), 0);
-    elements.eventCount.textContent = String(attendance.length);
-    elements.totalTime.textContent = duration(seconds);
-    elements.reportEmpty.hidden = attendance.length > 0;
-    elements.reportBody.innerHTML = attendance.map((row) => `<tr><td data-label="Activity"><strong>${escapeHtml(row.event_name)}</strong><small>${escapeHtml(row.venue || "No venue")}</small></td><td data-label="Date">${escapeHtml(date(row.first_time_in))}</td><td data-label="First In">${escapeHtml(time(row.first_time_in))}</td><td data-label="First Out">${escapeHtml(time(row.first_time_out))}</td><td data-label="Second In">${escapeHtml(time(row.second_time_in))}</td><td data-label="Second Out">${escapeHtml(time(row.second_time_out))}</td><td data-label="Total">${duration(row.total_seconds)}</td></tr>`).join("");
+    renderAttendance();
   } catch (error) {
     setStatus(elements.reportStatus, error.message, "error");
   }
+}
+
+function renderAttendance() {
+  const seconds = attendance.reduce((sum, row) => sum + Number(row.total_seconds || 0), 0);
+  elements.eventCount.textContent = String(attendance.length);
+  elements.totalTime.textContent = duration(seconds);
+  elements.reportEmpty.hidden = attendance.length > 0;
+  elements.reportBody.innerHTML = attendance.map((row) => `<tr><td data-label="Activity"><strong>${escapeHtml(row.event_name)}</strong><small>${escapeHtml(row.venue || "No venue")}</small></td><td data-label="Date">${escapeHtml(date(row.first_time_in))}</td><td data-label="First In">${escapeHtml(time(row.first_time_in))}</td><td data-label="First Out">${escapeHtml(time(row.first_time_out))}</td><td data-label="Second In">${escapeHtml(time(row.second_time_in))}</td><td data-label="Second Out">${escapeHtml(time(row.second_time_out))}</td><td data-label="Total">${duration(row.total_seconds)}</td></tr>`).join("");
 }
 
 async function downloadExcelReport() {

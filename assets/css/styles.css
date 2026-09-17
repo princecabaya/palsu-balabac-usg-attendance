@@ -318,6 +318,10 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
 .nav-button { padding: 0.65rem 0.9rem; color: var(--muted); background: transparent; border: 0; border-radius: 999px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
 .nav-button:hover { color: var(--ink); background: var(--peach-pale); }
 .portal-header-actions { display: flex; align-items: center; justify-content: flex-end; }
+.portal-preview-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; padding: 0.9rem 1rem; color: #744015; background: #fff3dc; border: 1px solid #efc37a; border-radius: 14px; }
+.portal-preview-banner div { display: grid; gap: 0.2rem; }
+.portal-preview-banner span { font-size: 0.78rem; line-height: 1.45; }
+.portal-preview-mode [disabled] { cursor: not-allowed; }
 .portal-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
 .privacy-badge { display: grid; gap: 0.2rem; max-width: 330px; padding: 0.9rem 1rem; color: #245e38; background: var(--green-pale); border: 1px solid #b8dfc6; border-radius: 15px; }
 .privacy-badge span { font-size: 0.78rem; line-height: 1.45; }
@@ -366,6 +370,7 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
 
 /* Student account administration */
 .student-admin-page > .section-heading { margin-bottom: 1.5rem; }
+.directory-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.55rem; }
 .bulk-enrollment-panel { display: grid; gap: 1rem; margin-bottom: 1.25rem; border-top: 5px solid var(--orange); }
 .historical-import-panel { display: grid; gap: 1rem; margin-bottom: 1.25rem; border-top: 5px solid var(--blue); }
 .historical-review { display: grid; gap: 0.9rem; }
@@ -532,7 +537,7 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
   .report-search-form { grid-template-columns: 1fr; }
   .student-search-result { align-items: flex-start; }
   .student-search-result em { display: none; }
-  .portal-hero, .account-heading { display: grid; }
+  .portal-hero, .account-heading, .portal-preview-banner { display: grid; }
   .privacy-badge { max-width: none; }
   .portal-id-preview { grid-template-columns: repeat(2, 397px); justify-content: start; }
   .account-table th:nth-child(2), .account-table td:nth-child(2), .account-table th:nth-child(4), .account-table td:nth-child(4) { display: none; }

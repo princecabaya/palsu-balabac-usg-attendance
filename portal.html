@@ -8,14 +8,14 @@
   <meta name="description" content="Private PSU Balabac USG student attendance portal.">
   <title>Student Portal | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.4">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.6">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/portal.js?v=20260917.5"></script>
+  <script type="module" src="assets/js/portal.js?v=20260917.6"></script>
 </head>
 <body class="portal-body">
   <header class="site-header no-print">
@@ -59,6 +59,10 @@
     </section>
 
     <section id="student-account" hidden>
+      <aside class="portal-preview-banner no-print" id="portal-preview-banner" hidden>
+        <div><strong>Administrator interface preview</strong><span>This is sample information. No student account is open and changes cannot be saved.</span></div>
+        <span>Close this tab to return to Student Accounts.</span>
+      </aside>
       <section class="account-heading no-print">
         <div><p class="eyebrow">Welcome</p><h2 id="account-student-name">Student name</h2><p id="account-student-meta"></p></div>
         <span class="status-tag" id="account-status">Active</span>

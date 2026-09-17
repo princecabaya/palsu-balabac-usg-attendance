@@ -37,6 +37,17 @@ test("student portal does not expose organizer navigation", () => {
   assert.match(portal, /id="portal-logout"/);
 });
 
+test("administrators can open a safe read-only preview of the student portal", () => {
+  assert.match(studentsPage, /href="portal\.html\?preview=interface"/);
+  assert.match(studentsPage, />Preview student portal</);
+  assert.match(portal, /id="portal-preview-banner"/);
+  assert.match(portalSource, /previewMode/);
+  assert.match(portalSource, /openInterfacePreview/);
+  assert.match(portalSource, /No student account is open|sample/i);
+  assert.match(portalSource, /control\.disabled = true/);
+  assert.match(portalSource, /button\.disabled = true/);
+});
+
 test("student profile collects requested back-of-ID and emergency fields", () => {
   for (const id of ["profile-birth-date", "profile-address", "profile-phone", "profile-emergency-name", "profile-emergency-phone", "profile-photo"]) {
     assert.match(portal, new RegExp(`id="${id}"`));
@@ -119,7 +130,7 @@ test("administrators can correct misspelled student names with an audit trail", 
 
 test("new-account panel fills the row while temporary credentials are hidden", () => {
   assert.match(styles, /\.student-admin-grid:has\(\.credential-panel\[hidden\]\)\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
-  assert.match(studentsPage, /styles\.css\?v=20260915\.8/);
+  assert.match(studentsPage, /styles\.css\?v=20260917\.6/);
 });
 
 test("database uses RLS, paired attendance, idempotency and audited corrections", () => {
