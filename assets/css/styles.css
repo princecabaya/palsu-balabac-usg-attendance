@@ -287,7 +287,7 @@ input::placeholder { color: #93a1ab; }
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
-.student-id::before { content: ""; position: absolute; z-index: -1; inset: 0; background: url("../img/id-card-art.svg") center bottom / 100% 100% no-repeat; }
+.id-card-background { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; user-select: none; }
 .id-header { position: relative; z-index: 2; display: grid; grid-template-columns: 19mm 1fr 19mm; align-items: center; gap: 2mm; width: 100%; height: 33mm; padding: 6.5mm 5mm 2.5mm; color: #101820; text-align: center; }
 .id-header img { width: 18.5mm; height: 18.5mm; padding: 0.7mm; object-fit: contain; background: rgba(255,255,255,0.96); border: 0.35mm solid rgba(24,48,68,0.15); border-radius: 50%; box-shadow: 0 1.3mm 3mm rgba(24,48,68,0.12); }
 .id-header strong { display: block; white-space: nowrap; font-size: 3.8mm; line-height: 1.05; letter-spacing: 0.015em; }
@@ -339,7 +339,10 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
 .portal-id-preview { display: grid; grid-template-columns: repeat(2, 105mm); gap: 18px; width: fit-content; max-width: 100%; margin: 1.5rem auto; overflow-x: auto; padding: 0 0 1rem; }
 .student-own-report { margin-top: 1.25rem; }
 
-.student-id--back::before { opacity: 0.82; transform: none; }
+.student-id--back .id-card-background { opacity: 0.82; }
+.student-id--export .id-details { overflow: visible; }
+.student-id--export .id-details h3,
+.student-id--export .id-details .program-name { display: block; max-height: none; overflow: visible; -webkit-line-clamp: unset; }
 .id-back-details { position: relative; z-index: 2; display: grid; gap: 2mm; padding: 14mm 8mm 25mm; }
 .id-back-row { display: grid; align-content: center; gap: 1mm; min-height: 13mm; padding: 2mm 3mm; background: rgba(255,255,255,0.9); border: 0.35mm solid rgba(24,48,68,0.13); border-radius: 3mm 7mm 3mm 7mm; box-shadow: 0 1mm 2.5mm rgba(24,48,68,0.06); }
 .id-back-row small { color: var(--orange-dark); font-size: 2mm; font-weight: 900; letter-spacing: 0.11em; text-transform: uppercase; }

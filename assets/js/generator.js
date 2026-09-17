@@ -1,5 +1,6 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
-import { renderStudentIdPair } from "./id-card.js?v=20260915.7";
+import { renderStudentIdPair } from "./id-card.js?v=20260917.3";
+import { captureIdCardBlob } from "./id-export.js?v=20260917.3";
 import { normalizeProgram } from "./qr-payload.js";
 import { getOwnProfile, getSession, listStudents, privateAssetUrls, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js?v=20260915.7";
 
@@ -214,15 +215,11 @@ async function downloadAllCards() {
     if (!window.html2canvas || !window.JSZip) {
       throw new Error("The ZIP export libraries did not load. Refresh the page and try again, or use Print 4 IDs per A4.");
     }
-    if (document.fonts?.ready) await document.fonts.ready;
-    await waitForImages(cards);
-
     const zip = new JSZip();
     for (let index = 0; index < cards.length; index += 1) {
       const card = cards[index];
       elements.download.textContent = `Preparing ${index + 1} of ${cards.length}…`;
-      const canvas = await html2canvas(card, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
-      const image = await canvasToBlob(canvas);
+      const image = await captureIdCardBlob(card);
       const studentNumber = safeFilenamePart(card.dataset.studentNumber || `student-${index + 1}`);
       const side = card.dataset.idSide || `side-${index + 1}`;
       zip.file(`PSU-USG-A6-ID-${studentNumber}-${side}.png`, image);
@@ -244,19 +241,6 @@ async function downloadAllCards() {
     elements.download.disabled = false;
     setDownloadLabel(idCount);
   }
-}
-
-function waitForImages(cards) {
-  return Promise.all(cards.flatMap((card) => [...card.querySelectorAll("img")]).map((image) => {
-    if (image.complete) return Promise.resolve();
-    return new Promise((resolve) => { image.addEventListener("load", resolve, { once: true }); image.addEventListener("error", resolve, { once: true }); });
-  }));
-}
-
-function canvasToBlob(canvas) {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("An ID image could not be created.")), "image/png");
-  });
 }
 
 function safeFilenamePart(value) {

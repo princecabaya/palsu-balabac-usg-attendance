@@ -7,6 +7,7 @@ export function renderStudentIdPair(container, profile, photoUrl = "") {
   front.className = "student-id student-id--front";
   front.dataset.idSide = "front";
   front.innerHTML = `
+    <img class="id-card-background" src="assets/img/id-card-art.svg" alt="" aria-hidden="true">
     <header class="id-header">
       <img src="assets/img/psu-logo.png" alt="">
       <div><strong>PALAWAN STATE UNIVERSITY</strong><small>BALABAC CAMPUS · USG</small><span>STUDENT ATTENDANCE ID</span></div>
@@ -25,6 +26,7 @@ export function renderStudentIdPair(container, profile, photoUrl = "") {
   back.dataset.idSide = "back";
   back.setAttribute("aria-label", `Back of attendance ID for ${name}`);
   back.innerHTML = `
+    <img class="id-card-background" src="assets/img/id-card-art.svg" alt="" aria-hidden="true">
     <section class="id-back-details">
       ${backRow("Student number", profile.student_number)}
       ${backRow("Date of birth", formatBirthDate(profile.date_of_birth))}

@@ -1,5 +1,6 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
-import { renderStudentIdPair } from "./id-card.js?v=20260915.7";
+import { renderStudentIdPair } from "./id-card.js?v=20260917.3";
+import { captureIdCard, captureIdCardBlob } from "./id-export.js?v=20260917.3";
 import { groupAttendanceSessions } from "./attendance-report.js?v=20260915.3";
 import {
   changeStudentPassword,
@@ -142,23 +143,12 @@ async function handleProfileSave(event) {
   }
 }
 
-async function cardCanvas(card) {
-  if (!window.html2canvas) throw new Error("The ID export library did not load.");
-  if (document.fonts?.ready) await document.fonts.ready;
-  return window.html2canvas(card, { scale: 3, backgroundColor: "#ffffff", useCORS: true });
-}
-
-async function cardBlob(card) {
-  const canvas = await cardCanvas(card);
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("The ID image could not be created.")), "image/png"));
-}
-
 async function saveIdCopies() {
   if (!idCards) return;
   setBusy(elements.saveId, true, "Saving…");
   clearStatus(elements.idStatus);
   try {
-    const [front, back] = await Promise.all([cardBlob(idCards.front), cardBlob(idCards.back)]);
+    const [front, back] = await Promise.all([captureIdCardBlob(idCards.front), captureIdCardBlob(idCards.back)]);
     await saveStudentIdCopy("front", front);
     await saveStudentIdCopy("back", back);
     setStatus(elements.idStatus, "A private copy of both ID sides was saved to your account.", "success");
@@ -175,7 +165,7 @@ async function downloadIdPair() {
   clearStatus(elements.idStatus);
   try {
     const zip = new window.JSZip();
-    const [front, back] = await Promise.all([cardBlob(idCards.front), cardBlob(idCards.back)]);
+    const [front, back] = await Promise.all([captureIdCardBlob(idCards.front), captureIdCardBlob(idCards.back)]);
     zip.file(`PSU-USG-ID-${profile.student_number}-FRONT.png`, front);
     zip.file(`PSU-USG-ID-${profile.student_number}-BACK.png`, back);
     const archive = await zip.generateAsync({ type: "blob" });
@@ -194,7 +184,7 @@ async function downloadIdPdf() {
   try {
     const JsPdf = window.jspdf?.jsPDF;
     if (!JsPdf) throw new Error("The PDF export library did not load. Refresh the page and try again.");
-    const [frontCanvas, backCanvas] = await Promise.all([cardCanvas(idCards.front), cardCanvas(idCards.back)]);
+    const [frontCanvas, backCanvas] = await Promise.all([captureIdCard(idCards.front), captureIdCard(idCards.back)]);
     const pdf = new JsPdf({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
     const quadrantWidth = 105;
     const quadrantHeight = 148.5;

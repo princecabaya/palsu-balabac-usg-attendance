@@ -2,12 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [css, generator, page, idCard, client] = await Promise.all([
+const [css, generator, page, idCard, client, idExport] = await Promise.all([
   readFile(new URL("../assets/css/styles.css", import.meta.url), "utf8"),
   readFile(new URL("../assets/js/generator.js", import.meta.url), "utf8"),
   readFile(new URL("../generator.html", import.meta.url), "utf8"),
   readFile(new URL("../assets/js/id-card.js", import.meta.url), "utf8"),
   readFile(new URL("../assets/js/supabase-client.js", import.meta.url), "utf8"),
+  readFile(new URL("../assets/js/id-export.js", import.meta.url), "utf8"),
 ]);
 
 test("student IDs use an A6 portrait canvas", () => {
@@ -31,8 +32,8 @@ test("photo and QR are equal-size side-by-side panels", () => {
 test("student ID includes a blank signature line", () => {
   assert.match(idCard, /class="id-signature"/);
   assert.match(idCard, /STUDENT'S SIGNATURE/);
-  assert.match(page, /styles\.css\?v=20260915\.4/);
-  assert.match(page, /generator\.js\?v=20260915\.7/);
+  assert.match(page, /styles\.css\?v=20260917\.3/);
+  assert.match(page, /generator\.js\?v=20260917\.3/);
 });
 
 test("ID Generator loads enrolled students through Supabase administrator access", () => {
@@ -60,4 +61,13 @@ test("all generated IDs can be downloaded in one ZIP archive", () => {
   assert.match(generator, /new\s+JSZip\(\)/);
   assert.match(generator, /zip\.file\(`PSU-USG-A6-ID-\$\{studentNumber\}-\$\{side\}\.png`/);
   assert.match(generator, /zip\.generateAsync\(\{\s*type:\s*"blob"\s*\}/);
+});
+
+test("PNG and ZIP exports preserve the preview background and unclipped text", () => {
+  assert.match(idCard, /class="id-card-background"[^>]+id-card-art\.svg/);
+  assert.match(css, /\.id-card-background\s*\{[^}]*object-fit:\s*fill;/s);
+  assert.match(css, /\.student-id--export \.id-details\s*\{[^}]*overflow:\s*visible;/s);
+  assert.match(idExport, /onclone\(clonedDocument\)/);
+  assert.match(idExport, /classList\.add\("student-id--export"\)/);
+  assert.match(generator, /captureIdCardBlob\(card\)/);
 });
