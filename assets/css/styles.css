@@ -332,6 +332,17 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
 .profile-form { display: grid; gap: 0.9rem; }
 .profile-form p, .portal-id-tools p { margin-bottom: 0; color: var(--muted); }
 .field small { color: var(--muted); font-size: 0.72rem; }
+.address-builder { display: grid; gap: 0.85rem; min-width: 0; margin: 0; padding: 1rem; background: #f8fbfc; border: 1px solid var(--line); border-radius: 15px; }
+.address-builder legend { padding: 0 0.35rem; color: var(--ink); font-size: 0.92rem; font-weight: 850; }
+.address-builder .address-help { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+.address-guided { display: grid; gap: 0.85rem; }
+.address-location-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.address-location-grid select:disabled { color: var(--ink); background: #eef3f5; opacity: 1; cursor: default; }
+.address-preview { display: grid; gap: 0.2rem; padding: 0.75rem 0.85rem; color: #245e38; background: var(--green-pale); border: 1px solid #b8dfc6; border-radius: 11px; }
+.address-preview span { font-size: 0.68rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+.address-preview strong { overflow-wrap: anywhere; font-size: 0.84rem; line-height: 1.45; }
+.address-source { color: var(--muted); font-size: 0.7rem; line-height: 1.4; }
+.address-source a { color: var(--blue-dark); }
 .privacy-check { display: grid; grid-template-columns: auto 1fr; gap: 0.65rem; align-items: start; padding: 0.8rem; background: var(--peach-pale); border-radius: 11px; font-size: 0.82rem; line-height: 1.45; }
 .privacy-check input { width: 18px; min-height: 18px; }
 .privacy-check a { color: var(--blue-dark); }
@@ -505,7 +516,7 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
   .scanner-aside { display: block; }
   .scanner-aside .aside-art { height: 170px; }
   .scanner-aside .steps-list { display: grid; }
-  .filter-row, .two-fields { grid-template-columns: 1fr; }
+  .filter-row, .two-fields, .address-location-grid { grid-template-columns: 1fr; }
   .bulk-upload-row, .bulk-progress { grid-template-columns: 1fr; }
   .filter-row .field--grow { grid-column: auto; }
   .selection-bar { align-items: flex-start; flex-wrap: wrap; }

@@ -1,4 +1,5 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
+import { BALABAC_BARANGAYS, formatBalabacAddress, parseStoredAddress } from "./address.js?v=20260917.4";
 import { renderStudentIdPair } from "./id-card.js?v=20260917.3";
 import { captureIdCard, captureIdCardBlob } from "./id-export.js?v=20260917.3";
 import { groupAttendanceSessions } from "./attendance-report.js?v=20260915.3";
@@ -20,7 +21,7 @@ const elements = {
   login: document.querySelector("#student-login"), loginForm: document.querySelector("#student-login-form"), username: document.querySelector("#student-username"), password: document.querySelector("#student-password"), loginStatus: document.querySelector("#student-login-status"),
   passwordPanel: document.querySelector("#password-change"), passwordForm: document.querySelector("#password-change-form"), newPassword: document.querySelector("#new-password"), confirmPassword: document.querySelector("#confirm-password"), passwordStatus: document.querySelector("#password-change-status"),
   account: document.querySelector("#student-account"), logout: document.querySelector("#portal-logout"), name: document.querySelector("#account-student-name"), meta: document.querySelector("#account-student-meta"), accountStatus: document.querySelector("#account-status"),
-  profileForm: document.querySelector("#student-profile-form"), birthDate: document.querySelector("#profile-birth-date"), address: document.querySelector("#profile-address"), phone: document.querySelector("#profile-phone"), emergencyName: document.querySelector("#profile-emergency-name"), emergencyPhone: document.querySelector("#profile-emergency-phone"), photo: document.querySelector("#profile-photo"), privacy: document.querySelector("#profile-privacy"), profileStatus: document.querySelector("#profile-status"),
+  profileForm: document.querySelector("#student-profile-form"), birthDate: document.querySelector("#profile-birth-date"), address: document.querySelector("#profile-address"), addressMode: document.querySelector("#profile-address-mode"), guidedAddress: document.querySelector("#profile-balabac-address"), barangay: document.querySelector("#profile-address-barangay"), addressDetail: document.querySelector("#profile-address-detail"), manualAddressField: document.querySelector("#profile-manual-address-field"), manualAddress: document.querySelector("#profile-address-manual"), addressPreview: document.querySelector("#profile-address-preview strong"), phone: document.querySelector("#profile-phone"), emergencyName: document.querySelector("#profile-emergency-name"), emergencyPhone: document.querySelector("#profile-emergency-phone"), photo: document.querySelector("#profile-photo"), privacy: document.querySelector("#profile-privacy"), profileStatus: document.querySelector("#profile-status"),
   idPreview: document.querySelector("#portal-id-preview"), saveId: document.querySelector("#save-id-copy"), downloadId: document.querySelector("#download-id-pair"), pdfId: document.querySelector("#download-id-pdf"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
   reportBody: document.querySelector("#own-report-body"), reportEmpty: document.querySelector("#own-report-empty"), eventCount: document.querySelector("#own-event-count"), totalTime: document.querySelector("#own-total-time"), downloadReport: document.querySelector("#download-own-report"), reportStatus: document.querySelector("#own-report-status"),
 };
@@ -29,6 +30,12 @@ let profile;
 let photoUrl = "";
 let idCards;
 let attendance = [];
+
+BALABAC_BARANGAYS.forEach((barangay) => elements.barangay.add(new Option(barangay, barangay)));
+elements.addressMode.addEventListener("change", syncAddressEditor);
+elements.barangay.addEventListener("change", syncAddressEditor);
+elements.addressDetail.addEventListener("input", syncAddressEditor);
+elements.manualAddress.addEventListener("input", syncAddressEditor);
 
 elements.loginForm.addEventListener("submit", handleLogin);
 elements.passwordForm.addEventListener("submit", handlePasswordChange);
@@ -108,7 +115,7 @@ async function renderAccount() {
   elements.meta.textContent = `${profile.student_number} · ${profile.program}`;
   elements.accountStatus.textContent = profile.account_status;
   elements.birthDate.value = profile.date_of_birth || "";
-  elements.address.value = profile.address || "";
+  loadAddressEditor(profile.address || "");
   elements.phone.value = profile.phone || "";
   elements.emergencyName.value = profile.emergency_contact_name || "";
   elements.emergencyPhone.value = profile.emergency_contact_phone || "";
@@ -125,6 +132,12 @@ async function handleProfileSave(event) {
   clearStatus(elements.profileStatus);
   try {
     if (elements.photo.files?.[0]) profile = await uploadStudentPhoto(elements.photo.files[0]);
+    syncAddressEditor();
+    if (!elements.address.value) {
+      const target = elements.addressMode.value === "manual" ? elements.manualAddress : elements.barangay;
+      target.focus();
+      throw new Error(elements.addressMode.value === "manual" ? "Enter the complete address." : "Choose the student's barangay.");
+    }
     profile = await updateStudentProfile({
       dateOfBirth: elements.birthDate.value,
       address: elements.address.value,
@@ -141,6 +154,28 @@ async function handleProfileSave(event) {
   } finally {
     setBusy(button, false, "Save profile");
   }
+}
+
+function loadAddressEditor(value) {
+  const parsed = parseStoredAddress(value);
+  elements.addressMode.value = parsed.mode;
+  elements.barangay.value = parsed.barangay;
+  elements.addressDetail.value = parsed.detail;
+  elements.manualAddress.value = parsed.manual;
+  syncAddressEditor();
+}
+
+function syncAddressEditor() {
+  const isManual = elements.addressMode.value === "manual";
+  elements.guidedAddress.hidden = isManual;
+  elements.manualAddressField.hidden = !isManual;
+  elements.barangay.required = !isManual;
+  elements.manualAddress.required = isManual;
+  const address = isManual
+    ? elements.manualAddress.value.replace(/\s+/g, " ").trim()
+    : formatBalabacAddress({ detail: elements.addressDetail.value, barangay: elements.barangay.value });
+  elements.address.value = address;
+  elements.addressPreview.textContent = address || (isManual ? "Enter the complete address to preview it." : "Select a barangay to preview the correctly formatted address.");
 }
 
 async function saveIdCopies() {

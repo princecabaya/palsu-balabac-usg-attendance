@@ -8,7 +8,7 @@
   <meta name="description" content="Private PSU Balabac USG student attendance portal.">
   <title>Student Portal | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.3">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.4">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
@@ -16,7 +16,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/portal.js?v=20260917.3"></script>
+  <script type="module" src="assets/js/portal.js?v=20260917.4"></script>
 </head>
 <body class="portal-body">
   <header class="site-header no-print">
@@ -72,7 +72,24 @@
             <label class="field"><span>Date of birth</span><input type="date" id="profile-birth-date" required></label>
             <label class="field"><span>Phone number</span><input type="tel" id="profile-phone" autocomplete="tel" maxlength="30" required></label>
           </div>
-          <label class="field"><span>Complete address</span><textarea id="profile-address" rows="3" maxlength="300" required></textarea></label>
+          <fieldset class="address-builder">
+            <legend>Complete address</legend>
+            <p class="address-help">Choose the official location instead of typing it. Add only the house number, street, sitio or purok yourself.</p>
+            <label class="field"><span>Address type</span><select id="profile-address-mode"><option value="balabac">Balabac, Palawan</option><option value="manual">Outside Balabac</option></select></label>
+            <div id="profile-balabac-address" class="address-guided">
+              <div class="address-location-grid">
+                <label class="field"><span>Region</span><select disabled aria-label="Region"><option>MIMAROPA Region</option></select></label>
+                <label class="field"><span>Province</span><select disabled aria-label="Province"><option>Palawan</option></select></label>
+                <label class="field"><span>Municipality</span><select disabled aria-label="Municipality"><option>Balabac</option></select></label>
+                <label class="field"><span>Barangay</span><select id="profile-address-barangay" required><option value="">Choose barangay</option></select></label>
+              </div>
+              <label class="field"><span>House no., street, sitio or purok <small>(optional)</small></span><input id="profile-address-detail" maxlength="120" autocomplete="street-address" placeholder="Example: Purok 6"></label>
+            </div>
+            <label class="field" id="profile-manual-address-field" hidden><span>Complete address outside Balabac</span><textarea id="profile-address-manual" rows="3" maxlength="300" autocomplete="street-address" placeholder="House/Street, Barangay, Municipality/City, Province"></textarea></label>
+            <input type="hidden" id="profile-address">
+            <output class="address-preview" id="profile-address-preview" aria-live="polite"><span>Address on the ID</span><strong>Select a barangay to preview the correctly formatted address.</strong></output>
+            <small class="address-source">Barangay names follow the <a href="https://psa.gov.ph/classification/psgc/barangays/1705304000" target="_blank" rel="noopener">PSA Philippine Standard Geographic Code</a>.</small>
+          </fieldset>
           <div class="two-fields">
             <label class="field"><span>Person in case of emergency</span><input id="profile-emergency-name" maxlength="150" required></label>
             <label class="field"><span>Emergency contact number</span><input type="tel" id="profile-emergency-phone" maxlength="30" required></label>

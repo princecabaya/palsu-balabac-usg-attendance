@@ -46,6 +46,16 @@ test("student profile collects requested back-of-ID and emergency fields", () =>
   assert.match(portalSource, /saveStudentIdCopy\("back"/);
 });
 
+test("student address editor uses guided Balabac fields with a manual fallback", () => {
+  assert.match(portal, /id="profile-address-mode"/);
+  assert.match(portal, /id="profile-address-barangay"/);
+  assert.match(portal, /id="profile-address-detail"/);
+  assert.match(portal, /id="profile-address-manual"/);
+  assert.match(portal, /PSA Philippine Standard Geographic Code/);
+  assert.match(portalSource, /formatBalabacAddress/);
+  assert.match(portalSource, /parseStoredAddress/);
+});
+
 test("back of ID is headerless, signature-free and carries the required return notice", () => {
   assert.doesNotMatch(idCardSource, /id-back-header|id-back-signature/);
   assert.match(idCardSource, /Kindly return this ID to the owner if found\./);

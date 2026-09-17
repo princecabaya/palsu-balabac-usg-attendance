@@ -9,6 +9,7 @@ const jsFiles = [
   "assets/js/config.js",
   "assets/js/api.js",
   "assets/js/common.js",
+  "assets/js/address.js",
   "assets/js/qr-payload.js",
   "assets/js/scanner.js",
   "assets/js/generator.js",
