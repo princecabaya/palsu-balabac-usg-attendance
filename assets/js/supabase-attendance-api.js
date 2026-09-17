@@ -1,7 +1,9 @@
 import { getSupabase, listStudents, normalizeStudentNumber, profileDisplayName, signInAdmin } from "./supabase-client.js";
 
 export function usesSupabaseBackend() {
-  return window.USG_ATTENDANCE_CONFIG?.backendMode === "supabase";
+  const requestedBackend = new URLSearchParams(location.search).get("backend");
+  const pageBackend = document.body?.dataset.attendanceBackend;
+  return requestedBackend === "supabase" || pageBackend === "supabase" || window.USG_ATTENDANCE_CONFIG?.backendMode === "supabase";
 }
 
 export async function supabaseAdminLogin(password) {

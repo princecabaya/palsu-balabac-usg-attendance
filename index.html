@@ -7,12 +7,13 @@
   <meta name="description" content="QR attendance scanner for Palawan State University – Balabac Campus University Student Government events.">
   <title>QR Attendance Scanner | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260908.1">
-  <script src="assets/js/config.js?v=20260905.1"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.2">
+  <script src="assets/js/config.js?v=20260917.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
-  <script type="module" src="assets/js/scanner.js?v=20260908.1"></script>
+  <script type="module" src="assets/js/scanner.js?v=20260917.2"></script>
 </head>
-<body>
+<body data-attendance-backend="supabase">
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
       <span class="brand__seals">

@@ -1,12 +1,11 @@
-import { adminLogin, buildScannerLink, clearAdminSession, getAdminSession, getApiUrl, jsonp, setApiUrl } from "./api.js?v=20260908.1";
-import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js";
+import { supabaseAction } from "./supabase-attendance-api.js?v=20260917.2";
+import { getOwnProfile, getSession, signInAdmin, signOut, supabaseConfig } from "./supabase-client.js?v=20260917.2";
+import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js?v=20260905.1";
 
 const elements = {
-  apiForm: document.querySelector("#api-form"),
-  apiUrl: document.querySelector("#api-url"),
-  apiStatus: document.querySelector("#api-status"),
   login: document.querySelector("#admin-login"),
   loginForm: document.querySelector("#admin-login-form"),
+  email: document.querySelector("#admin-email"),
   password: document.querySelector("#admin-password"),
   loginStatus: document.querySelector("#admin-login-status"),
   logout: document.querySelector("#admin-logout"),
@@ -34,30 +33,11 @@ const elements = {
   dialogMessage: document.querySelector("#dialog-message"),
 };
 
-let session = getAdminSession();
 let issuedCode = "";
-let issuedEvent = null;
 
-elements.apiUrl.value = getApiUrl();
+elements.email.value = supabaseConfig().adminEmail;
 setEventDefaults();
-
-elements.apiForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const button = event.submitter;
-  button.disabled = true;
-  button.textContent = "Checking…";
-  clearStatus(elements.apiStatus);
-  try {
-    setApiUrl(elements.apiUrl.value);
-    const result = await jsonp("health");
-    setStatus(elements.apiStatus, result.configured ? "Connected to the USG Attendance Sheet." : "The web app is reachable, but Sheet setup has not been completed.", result.configured ? "success" : "info");
-  } catch (error) {
-    setStatus(elements.apiStatus, error.message, "error");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Save connection";
-  }
-});
+restoreAdminSession();
 
 elements.loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -66,25 +46,18 @@ elements.loginForm.addEventListener("submit", async (event) => {
   button.textContent = "Signing in…";
   clearStatus(elements.loginStatus);
   try {
-    session = await adminLogin(elements.password.value);
+    await signInAdmin(elements.password.value, elements.email.value.trim());
     elements.password.value = "";
     await openDashboard();
   } catch (error) {
-    setStatus(elements.loginStatus, error.message, "error");
+    setStatus(elements.loginStatus, friendlyError(error), "error");
   } finally {
     button.disabled = false;
     button.textContent = "Open control";
   }
 });
 
-elements.logout.addEventListener("click", () => {
-  clearAdminSession();
-  session = null;
-  elements.content.hidden = true;
-  elements.logout.hidden = true;
-  elements.login.hidden = false;
-  elements.password.focus();
-});
+elements.logout.addEventListener("click", logout);
 
 elements.eventForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -93,16 +66,15 @@ elements.eventForm.addEventListener("submit", async (event) => {
   button.textContent = "Creating event…";
   clearStatus(elements.eventFormStatus);
   try {
-    const response = await jsonp("createEvent", {
-      token: session.token,
+    const response = await supabaseAction("createEvent", {
       name: elements.eventName.value.trim(),
       venue: elements.eventVenue.value.trim(),
       eventDate: elements.eventDate.value,
       startTime: elements.eventTime.value,
       expiresAt: elements.eventExpiry.value,
-    }, 30000);
+    });
     showIssuedCode(response.event, response.controlCode, response.expiresAt);
-    setStatus(elements.eventFormStatus, `${response.event.name} was created as ${response.event.sheetName}.`, "success");
+    setStatus(elements.eventFormStatus, `${response.event.name} was created in Supabase.`, "success");
     elements.eventName.value = "";
     elements.eventVenue.value = "";
     setEventDefaults();
@@ -130,13 +102,21 @@ elements.eventCards.addEventListener("click", async (event) => {
     await eventAction(button, "rotateCode", eventNo, (response) => showIssuedCode(response.event, response.controlCode, response.expiresAt));
   }
   if (button.dataset.action === "end") {
-    const confirmed = await confirmAction("End this event?", `Attendance scanning for ${eventName} will be stopped. Recorded times will remain in the Sheet.`);
+    const confirmed = await confirmAction("End this event?", `Attendance scanning for ${eventName} will be stopped. Recorded attendance will remain in Supabase.`);
     if (!confirmed) return;
     await eventAction(button, "endEvent", eventNo);
   }
 });
 
-if (session && getApiUrl()) openDashboard();
+async function restoreAdminSession() {
+  try {
+    if (!await getSession()) return;
+    const profile = await getOwnProfile();
+    if (profile.role === "admin" && profile.account_status === "active") await openDashboard();
+  } catch {
+    await signOut().catch(() => {});
+  }
+}
 
 async function openDashboard() {
   elements.login.hidden = true;
@@ -145,12 +125,20 @@ async function openDashboard() {
   await loadEvents();
 }
 
+async function logout() {
+  await signOut().catch(() => {});
+  elements.content.hidden = true;
+  elements.logout.hidden = true;
+  elements.login.hidden = false;
+  elements.email.focus();
+}
+
 async function loadEvents() {
   clearStatus(elements.eventsStatus);
   elements.refreshEvents.disabled = true;
   elements.refreshEvents.textContent = "Refreshing…";
   try {
-    const response = await jsonp("listEvents", { token: session.token });
+    const response = await supabaseAction("listEvents");
     renderEvents(response.events);
   } catch (error) {
     handleSessionError(error, elements.eventsStatus);
@@ -165,7 +153,7 @@ function renderEvents(events) {
   elements.eventCards.innerHTML = events.map((item) => `
     <article class="event-card">
       <div class="event-card__top">
-        <div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.venue || "No venue")} · ${escapeHtml(item.sheetName)}</p></div>
+        <div><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.venue || "No venue")}</p></div>
         <span class="status-tag ${item.status === "ENDED" ? "status-tag--ended" : ""}">${escapeHtml(item.status)}</span>
       </div>
       <p>${escapeHtml(item.eventDate)} · ${escapeHtml(item.startTime)}<br>Code expires ${escapeHtml(formatDateTime(item.expiresAt))}</p>
@@ -189,7 +177,7 @@ async function eventAction(button, action, eventNo, onSuccess) {
   button.textContent = "Working…";
   clearStatus(elements.eventsStatus);
   try {
-    const response = await jsonp(action, { token: session.token, eventNo });
+    const response = await supabaseAction(action, { eventNo });
     onSuccess?.(response);
     await loadEvents();
   } catch (error) {
@@ -202,12 +190,17 @@ async function eventAction(button, action, eventNo, onSuccess) {
 
 function showIssuedCode(event, code, expiresAt) {
   issuedCode = code;
-  issuedEvent = event;
   elements.codeEmpty.hidden = true;
   elements.codeResult.hidden = false;
   elements.codeEventName.textContent = event.name;
   elements.codeOutput.textContent = formatCode(code);
   elements.codeExpiry.textContent = `Expires ${formatDateTime(expiresAt)}`;
+}
+
+function buildScannerLink() {
+  const url = new URL("scanner.html", location.href);
+  url.searchParams.set("backend", "supabase");
+  return url.toString();
 }
 
 function formatCode(code) {
@@ -227,15 +220,19 @@ async function copyText(value, button, label) {
   }
 }
 
-function handleSessionError(error, statusElement) {
-  setStatus(statusElement, error.message, "error");
-  if (error.code === "SESSION_EXPIRED") {
-    clearAdminSession();
-    session = null;
-    elements.content.hidden = true;
-    elements.logout.hidden = true;
-    elements.login.hidden = false;
-  }
+function friendlyError(error) {
+  const message = String(error?.message || "The Supabase request could not be completed.");
+  if (/EXPIRY_MUST_BE_FUTURE/i.test(message)) return "Choose a control-code expiry time in the future.";
+  if (/ACTIVE_EVENT_NOT_FOUND/i.test(message)) return "This event is no longer active. Refresh the attendance overview.";
+  if (/ADMIN_REQUIRED/i.test(message)) return "Active USG administrator access is required.";
+  if (/JWT|refresh token|session/i.test(message)) return "Your administrator session expired. Sign in again.";
+  return message;
+}
+
+async function handleSessionError(error, statusElement) {
+  const message = friendlyError(error);
+  setStatus(statusElement, message, "error");
+  if (/session expired|JWT|refresh token/i.test(message)) await logout();
 }
 
 function confirmAction(title, message) {

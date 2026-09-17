@@ -1,4 +1,4 @@
-import { supabaseAction, supabaseAdminLogin, supabaseScannerLogin, usesSupabaseBackend } from "./supabase-attendance-api.js";
+import { supabaseAction, supabaseAdminLogin, supabaseScannerLogin, usesSupabaseBackend } from "./supabase-attendance-api.js?v=20260917.2";
 
 const CONFIG_KEY = "psu-usg-api-url";
 const ADMIN_SESSION_KEY = "psu-usg-admin-session";

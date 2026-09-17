@@ -7,11 +7,12 @@
   <meta name="description" content="Organizer control dashboard for PSU Balabac USG event attendance.">
   <title>Attendance Control | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260908.1">
-  <script src="assets/js/config.js?v=20260905.1"></script>
-  <script type="module" src="assets/js/dashboard.js?v=20260908.1"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.2">
+  <script src="assets/js/config.js?v=20260917.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="assets/js/dashboard.js?v=20260917.2"></script>
 </head>
-<body>
+<body data-attendance-backend="supabase">
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
       <span class="brand__seals">
@@ -34,33 +35,21 @@
       <div>
         <p class="eyebrow">Organizer control</p>
         <h1>Events and checker access</h1>
-        <p class="lede">Create an event, issue a short-lived control code, and monitor attendance totals from the Google Sheet.</p>
+        <p class="lede">Create an event, issue a short-lived control code, and monitor attendance totals securely in Supabase.</p>
       </div>
       <button class="button button--quiet" id="admin-logout" type="button" hidden>Sign out</button>
     </section>
 
-    <section class="setup-card" id="api-setup">
-      <span class="setup-card__number">1</span>
-      <div>
-        <h2>Connect the attendance server</h2>
-        <p>Paste the web app URL ending in <code>/exec</code>. It stays on this device unless it is added permanently to <code>assets/js/config.js</code>.</p>
-        <form class="inline-form" id="api-form">
-          <label class="sr-only" for="api-url">Apps Script web app URL</label>
-          <input type="url" id="api-url" placeholder="https://script.google.com/macros/s/.../exec" required>
-          <button class="button button--secondary" type="submit">Save connection</button>
-        </form>
-        <div class="status" id="api-status" hidden role="status"></div>
-      </div>
-    </section>
-
     <section class="login-card" id="admin-login">
-      <div class="number-badge">02</div>
+      <div class="number-badge">A</div>
       <form id="admin-login-form">
         <h2>Administrator sign-in</h2>
-        <p>Your password never appears in the web request; the browser sends a one-time proof.</p>
-        <div class="inline-form">
-          <label class="sr-only" for="admin-password">Administrator password</label>
-          <input type="password" id="admin-password" autocomplete="current-password" placeholder="Administrator password" required>
+        <p>Use the same Supabase administrator account used on the Students and ID Generator pages.</p>
+        <div class="two-fields">
+          <label class="field"><span>Administrator email</span><input type="email" id="admin-email" autocomplete="username" placeholder="USG administrator email" required></label>
+          <label class="field"><span>Password</span><input type="password" id="admin-password" autocomplete="current-password" placeholder="Administrator password" required></label>
+        </div>
+        <div class="toolbar">
           <button class="button button--primary" type="submit">Open control</button>
         </div>
         <div class="status" id="admin-login-status" hidden role="status"></div>
@@ -70,7 +59,7 @@
     <section id="dashboard-content" hidden>
       <div class="dashboard-grid">
         <form class="panel event-form" id="event-form">
-          <div class="panel__heading"><div><p class="eyebrow">New event</p><h2>Create attendance sheet</h2></div></div>
+          <div class="panel__heading"><div><p class="eyebrow">New event</p><h2>Create attendance event</h2></div></div>
           <label class="field"><span>Event name</span><input id="event-name-input" required maxlength="100" placeholder="e.g., General Assembly"></label>
           <label class="field"><span>Venue</span><input id="event-venue-input" required maxlength="100" placeholder="e.g., Campus Activity Center"></label>
           <div class="two-fields">
@@ -78,7 +67,7 @@
             <label class="field"><span>Start time</span><input type="time" id="event-time-input" required></label>
           </div>
           <label class="field"><span>Control code expires</span><input type="datetime-local" id="event-expiry-input" required></label>
-          <p class="field-note">The event sheet supports first time in/out and second time in/out. A repeat scan within 30 seconds is ignored.</p>
+          <p class="field-note">Attendance is stored in Supabase with Time In and Time Out. A repeat scan within 30 seconds is ignored.</p>
           <button class="button button--primary" type="submit">Create event and code</button>
           <div class="status" id="event-form-status" hidden role="status"></div>
         </form>
@@ -104,11 +93,11 @@
 
       <section class="panel events-panel">
         <div class="panel__heading">
-          <div><p class="eyebrow">Google Sheet events</p><h2>Attendance overview</h2></div>
+          <div><p class="eyebrow">Supabase events</p><h2>Attendance overview</h2></div>
           <button class="button button--quiet button--small" id="refresh-events" type="button">Refresh totals</button>
         </div>
         <div class="event-cards" id="event-cards"></div>
-        <div class="empty-state" id="events-empty"><h3>No events yet</h3><p>Create the first event to prepare its attendance sheet and issue a checker code.</p></div>
+        <div class="empty-state" id="events-empty"><h3>No events yet</h3><p>Create the first attendance event and issue a checker code.</p></div>
         <div class="status" id="events-status" hidden role="status"></div>
       </section>
     </section>

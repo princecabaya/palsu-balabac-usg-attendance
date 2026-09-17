@@ -1,4 +1,4 @@
-import { clearScannerSession, getApiUrl, getScannerSession, jsonp, makeRequestId, normalizeControlCode, scannerLogin } from "./api.js?v=20260908.1";
+import { clearScannerSession, getApiUrl, getScannerSession, jsonp, makeRequestId, normalizeControlCode, scannerLogin } from "./api.js?v=20260917.2";
 import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js?v=20260905.1";
 import { parseQrPayload } from "./qr-payload.js";
 
@@ -70,7 +70,7 @@ elements.unlockForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearStatus(elements.unlockStatus);
   if (!getApiUrl()) {
-    setStatus(elements.unlockStatus, "This scanner link is missing the Google Sheet connection. Ask the organizer to copy the scanner link from the Control Dashboard.", "error");
+    setStatus(elements.unlockStatus, "This scanner link is missing its attendance database connection. Ask the organizer to copy the scanner-only link from the Control page.", "error");
     return;
   }
   const button = event.submitter;
@@ -155,7 +155,7 @@ async function ensureBackendCapabilities() {
   if (!backendCapabilitiesPromise) {
     backendCapabilitiesPromise = jsonp("health", {}, 10000).then((health) => {
       if (health.apiVersion < 2 || !health.capabilities?.attendanceModes || !health.capabilities?.separateStudentHistory) {
-        const error = new Error("The Google Sheet backend must be updated before scanning. Ask the organizer to replace Code.gs and redeploy the Apps Script web app.");
+        const error = new Error("The attendance database must be updated before scanning. Ask the USG administrator to complete the Supabase setup.");
         error.code = "BACKEND_UPDATE_REQUIRED";
         throw error;
       }
