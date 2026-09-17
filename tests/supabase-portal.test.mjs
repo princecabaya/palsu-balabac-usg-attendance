@@ -13,6 +13,7 @@ const attendanceApi = fs.readFileSync(new URL("../assets/js/supabase-attendance-
 const sharedApi = fs.readFileSync(new URL("../assets/js/api.js", import.meta.url), "utf8");
 const migration = fs.readFileSync(new URL("../supabase/migrations/001_attendance_portal.sql", import.meta.url), "utf8");
 const adminFunction = fs.readFileSync(new URL("../supabase/functions/admin-students/index.ts", import.meta.url), "utf8");
+const styles = fs.readFileSync(new URL("../assets/css/styles.css", import.meta.url), "utf8");
 
 test("public config contains only the Supabase publishable key", () => {
   assert.match(config, /supabaseUrl:\s*"https:\/\/edfcehmttcwhhknywflq\.supabase\.co"/);
@@ -93,6 +94,11 @@ test("administrators can correct misspelled student names with an audit trail", 
   assert.match(adminFunction, /student\.name_corrected/);
   assert.match(adminFunction, /before:/);
   assert.match(adminFunction, /after:/);
+});
+
+test("new-account panel fills the row while temporary credentials are hidden", () => {
+  assert.match(styles, /\.student-admin-grid:has\(\.credential-panel\[hidden\]\)\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+  assert.match(studentsPage, /styles\.css\?v=20260915\.8/);
 });
 
 test("database uses RLS, paired attendance, idempotency and audited corrections", () => {
