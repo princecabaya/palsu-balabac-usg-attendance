@@ -80,8 +80,14 @@ export function extractHistoricalAttendanceWorkbook(workbook, sourceName = "USG 
 
 export function resolveHistoricalStudent(rawStudentNumber, studentName, roster) {
   const studentNumber = normalizeStudentNumber(rawStudentNumber);
-  if (roster.byId.has(studentNumber)) return { studentNumber, matched: true, corrected: false };
   const nameKey = normalizeName(studentName);
+  const numberMatch = roster.byId.get(studentNumber);
+  if (numberMatch?.nameKey === nameKey) return { studentNumber, matched: true, corrected: false };
+
+  // Older event sheets contain several shifted or mistyped student numbers. A
+  // mistyped number can still belong to a different enrolled student, so an ID
+  // lookup alone is not enough. Prefer a unique, confident name match whenever
+  // the event-row name disagrees with the roster name for that number.
   const exact = roster.byName.get(nameKey) || [];
   if (exact.length === 1) return { studentNumber: exact[0].studentNumber, matched: true, corrected: exact[0].studentNumber !== studentNumber };
 
@@ -94,6 +100,7 @@ export function resolveHistoricalStudent(rawStudentNumber, studentName, roster) 
   if (nameKey.length >= 8 && best && best.distance <= tolerance && (!second || second.distance > best.distance)) {
     return { studentNumber: best.entry.studentNumber, matched: true, corrected: best.entry.studentNumber !== studentNumber };
   }
+  if (numberMatch) return { studentNumber, matched: true, corrected: false };
   return { studentNumber, matched: false, corrected: false };
 }
 

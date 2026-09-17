@@ -30,6 +30,24 @@ test("historical attendance resolves workbook student-number typos by a unique s
   });
 });
 
+test("historical attendance does not trust a valid number when it belongs to a different student", () => {
+  const students = roster([
+    { studentNumber: "2025-10-0109BL", nameKey: "prietofrancined" },
+    { studentNumber: "2025-10-0111BL", nameKey: "ramosmalkiep" },
+    { studentNumber: "2024-10-0090BL", nameKey: "hamilonnordayat" },
+  ]);
+
+  assert.deepEqual(resolveHistoricalStudent("2025-10-0109BL", "Ramos, Malkie P.", students), {
+    studentNumber: "2025-10-0111BL", matched: true, corrected: true,
+  });
+  assert.deepEqual(resolveHistoricalStudent("2024-10-0088BL", "Hamilon, Nur-Daya T.", students), {
+    studentNumber: "2024-10-0090BL", matched: true, corrected: true,
+  });
+  assert.deepEqual(resolveHistoricalStudent("2025-10-0109BL", "Prieto, Francine D.", students), {
+    studentNumber: "2025-10-0109BL", matched: true, corrected: false,
+  });
+});
+
 test("student report combines two sessions for one activity without hiding either pair", () => {
   const rows = [
     {

@@ -1,7 +1,7 @@
 import { clearStatus, escapeHtml, setStatus } from "./common.js";
 import { administerStudent, getOwnProfile, getSession, listStudents, normalizeStudentNumber, profileDisplayName, signInAdmin, signOut } from "./supabase-client.js?v=20260915.7";
 import { parseRosterFile } from "./roster-import.js";
-import { parseHistoricalAttendanceFile } from "./attendance-import.js?v=20260915.3";
+import { parseHistoricalAttendanceFile } from "./attendance-import.js?v=20260917.4";
 
 const elements = {
   login: document.querySelector("#student-admin-login"), loginForm: document.querySelector("#student-admin-login-form"), email: document.querySelector("#student-admin-email"), password: document.querySelector("#student-admin-password"), loginStatus: document.querySelector("#student-admin-login-status"), logout: document.querySelector("#student-admin-logout"), content: document.querySelector("#student-admin-content"),
