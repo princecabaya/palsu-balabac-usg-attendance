@@ -1,4 +1,5 @@
 import { getSupabase, listStudents, normalizeStudentNumber, profileDisplayName, signInAdmin } from "./supabase-client.js";
+import { groupAttendanceSessions } from "./attendance-report.js";
 
 export function usesSupabaseBackend() {
   const requestedBackend = new URLSearchParams(location.search).get("backend");
@@ -93,7 +94,7 @@ export async function supabaseAction(action, params = {}) {
     if (studentError || !student) throw apiError("Student not found.", "STUDENT_NOT_FOUND");
     const { data: rows, error } = await supabase.from("attendance_report").select("*").eq("student_id", student.id).is("voided_at", null).order("time_in", { ascending: false });
     if (error) throw apiError(error.message, error.code);
-    return { ok: true, student: { id: student.id, studentNumber: student.student_number, name: profileDisplayName(student), program: student.program }, history: (rows || []).map(reportRow) };
+    return { ok: true, student: { id: student.id, studentNumber: student.student_number, name: profileDisplayName(student), program: student.program }, history: groupAttendanceSessions(rows || []).map(reportRow) };
   }
 
   throw apiError("Unknown attendance action.", "UNKNOWN_ACTION");
@@ -103,7 +104,8 @@ function reportRow(row) {
   return {
     sessionId: row.session_id, eventName: row.event_name, venue: row.venue,
     eventDate: formatDate(row.event_starts_at), attendanceDate: formatDate(row.time_in),
-    firstTimeIn: row.time_in, firstTimeOut: row.time_out, secondTimeIn: null, secondTimeOut: null,
+    firstTimeIn: row.first_time_in || row.time_in, firstTimeOut: row.first_time_out ?? row.time_out,
+    secondTimeIn: row.second_time_in || null, secondTimeOut: row.second_time_out || null,
     totalSeconds: Number(row.total_seconds || 0), totalTime: duration(row.total_seconds),
     offlineEntry: Boolean(row.time_in_offline || row.time_out_offline),
   };

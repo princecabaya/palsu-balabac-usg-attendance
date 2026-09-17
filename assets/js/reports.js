@@ -1,9 +1,11 @@
-import { adminLogin, clearAdminSession, getAdminSession, getApiUrl, jsonp } from "./api.js?v=20260908.1";
+import { supabaseAction } from "./supabase-attendance-api.js?v=20260917.7";
+import { getOwnProfile, getSession, signInAdmin, signOut, supabaseConfig } from "./supabase-client.js?v=20260915.7";
 import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js?v=20260905.1";
 
 const elements = {
   login: document.querySelector("#report-login"),
   loginForm: document.querySelector("#report-login-form"),
+  email: document.querySelector("#report-email"),
   password: document.querySelector("#report-password"),
   loginStatus: document.querySelector("#report-login-status"),
   logout: document.querySelector("#report-logout"),
@@ -24,9 +26,10 @@ const elements = {
   download: document.querySelector("#download-student-report"),
 };
 
-let session = getAdminSession();
 let students = [];
 let currentReport = null;
+
+elements.email.value = supabaseConfig().adminEmail;
 
 elements.loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -35,8 +38,7 @@ elements.loginForm.addEventListener("submit", async (event) => {
   button.textContent = "Signing in…";
   clearStatus(elements.loginStatus);
   try {
-    if (!getApiUrl()) throw new Error("The Google Sheet connection is not configured. Ask the organizer to open the Control Dashboard first.");
-    session = await adminLogin(elements.password.value);
+    await signInAdmin(elements.password.value, elements.email.value.trim());
     elements.password.value = "";
     await openReports();
   } catch (error) {
@@ -47,7 +49,7 @@ elements.loginForm.addEventListener("submit", async (event) => {
   }
 });
 
-elements.logout.addEventListener("click", showLogin);
+elements.logout.addEventListener("click", logout);
 elements.search.addEventListener("input", renderSearchResults);
 elements.searchForm.addEventListener("submit", handleSearchSubmit);
 elements.searchResults.addEventListener("click", (event) => {
@@ -57,36 +59,38 @@ elements.searchResults.addEventListener("click", (event) => {
 elements.print.addEventListener("click", printStudentReport);
 elements.download.addEventListener("click", downloadStudentReport);
 
-if (session && getApiUrl()) openReports();
-else showLogin(false);
+restoreAdminSession();
+
+async function restoreAdminSession() {
+  try {
+    if (!await getSession()) return showLogin();
+    const profile = await getOwnProfile();
+    if (profile.role === "admin" && profile.account_status === "active") return openReports();
+    await signOut().catch(() => {});
+  } catch {
+    await signOut().catch(() => {});
+  }
+  showLogin();
+}
 
 async function openReports() {
   elements.login.hidden = true;
   elements.tools.hidden = false;
   elements.logout.hidden = false;
   elements.search.disabled = true;
-  setStatus(elements.status, "Loading the official student roster…", "info");
+  setStatus(elements.status, "Loading the secure student directory…", "info");
   try {
-    const health = await jsonp("health", {}, 10000);
-    if (health.apiVersion < 3 || !health.capabilities?.adminReports) {
-      const error = new Error("The Google Sheet backend must be updated and redeployed before the Reports page can be used.");
-      error.code = "BACKEND_UPDATE_REQUIRED";
-      throw error;
-    }
-    const response = await jsonp("students", { token: session.token });
+    const response = await supabaseAction("students");
     students = response.students || [];
     elements.search.disabled = false;
     elements.search.focus();
     setStatus(elements.status, `${students.length} students loaded. Search by name or student ID.`, "success");
   } catch (error) {
-    setStatus(elements.status, error.message, "error");
-    if (error.code === "SESSION_EXPIRED") showLogin();
+    await handleReportError(error, elements.status);
   }
 }
 
-function showLogin(clearSession = true) {
-  if (clearSession) clearAdminSession();
-  session = null;
+function showLogin() {
   students = [];
   currentReport = null;
   elements.login.hidden = false;
@@ -94,6 +98,11 @@ function showLogin(clearSession = true) {
   elements.logout.hidden = true;
   elements.report.hidden = true;
   elements.password.focus();
+}
+
+async function logout() {
+  await signOut().catch(() => {});
+  showLogin();
 }
 
 function matchingStudents(query) {
@@ -145,17 +154,27 @@ async function loadStudentReport(studentNumber) {
   elements.report.hidden = true;
   setStatus(elements.status, "Loading attendance activities…", "info");
   try {
-    const result = await jsonp("studentReport", { token: session.token, studentNumber });
+    const result = await supabaseAction("studentReport", { studentNumber });
     showStudentReport(result);
     elements.search.value = result.student.studentNumber;
     elements.searchResults.innerHTML = "";
     clearStatus(elements.status);
   } catch (error) {
-    setStatus(elements.status, error.message, "error");
-    if (error.code === "SESSION_EXPIRED") showLogin();
+    await handleReportError(error, elements.status);
   } finally {
     buttons.forEach((button) => { button.disabled = false; });
   }
+}
+
+async function handleReportError(error, statusElement) {
+  const message = error?.message || "The attendance report could not be loaded.";
+  if (error?.code === "SESSION_EXPIRED" || /jwt|session|not authenticated|permission denied/i.test(message)) {
+    await signOut().catch(() => {});
+    showLogin();
+    setStatus(elements.loginStatus, "Your administrator session expired. Sign in again.", "error");
+    return;
+  }
+  setStatus(statusElement, message, "error");
 }
 
 function showStudentReport(result) {

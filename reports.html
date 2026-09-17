@@ -7,11 +7,12 @@
   <meta name="description" content="Search and print student attendance reports for PSU Balabac USG events.">
   <title>Student Attendance Reports | PSU Balabac USG</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260908.1">
-  <script src="assets/js/config.js?v=20260905.1"></script>
-  <script type="module" src="assets/js/reports.js?v=20260908.1"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.6">
+  <script src="assets/js/config.js?v=20260915.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
+  <script type="module" src="assets/js/reports.js?v=20260917.7"></script>
 </head>
-<body class="reports-body">
+<body class="reports-body" data-attendance-backend="supabase">
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="PSU Balabac USG Attendance home">
       <span class="brand__seals">
@@ -43,10 +44,12 @@
       <div class="number-badge">R</div>
       <form id="report-login-form">
         <h2>USG administrator sign-in</h2>
-        <p>Use the same administrator password used for the Control Dashboard.</p>
-        <div class="inline-form">
-          <label class="sr-only" for="report-password">Administrator password</label>
-          <input type="password" id="report-password" autocomplete="current-password" placeholder="Administrator password" required>
+        <p>Use the same Supabase administrator account used on the Control, Students and ID Generator pages.</p>
+        <div class="two-fields">
+          <label class="field"><span>Administrator email</span><input type="email" id="report-email" autocomplete="username" placeholder="USG administrator email" required></label>
+          <label class="field"><span>Password</span><input type="password" id="report-password" autocomplete="current-password" placeholder="Administrator password" required></label>
+        </div>
+        <div class="toolbar">
           <button class="button button--primary" type="submit">Open reports</button>
         </div>
         <div class="status" id="report-login-status" hidden role="status"></div>
@@ -99,7 +102,7 @@
           </table>
         </div>
         <p class="report-empty" id="student-report-empty" hidden>No recorded attendance was found for this student.</p>
-        <p class="report-generated">Generated from the USG Attendance Sheet: <time id="student-report-generated-at"></time></p>
+        <p class="report-generated">Generated from the secure USG attendance database: <time id="student-report-generated-at"></time></p>
       </section>
     </section>
   </main>

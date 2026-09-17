@@ -4,7 +4,7 @@ import fs from "node:fs";
 
 const reportPage = fs.readFileSync(new URL("../reports.html", import.meta.url), "utf8");
 const reportSource = fs.readFileSync(new URL("../assets/js/reports.js", import.meta.url), "utf8");
-const backendSource = fs.readFileSync(new URL("../google-apps-script/Code.gs", import.meta.url), "utf8");
+const attendanceApi = fs.readFileSync(new URL("../assets/js/supabase-attendance-api.js", import.meta.url), "utf8");
 const organizerPages = ["../index.html", "../generator.html", "../dashboard.html", "../reports.html"]
   .map((path) => fs.readFileSync(new URL(path, import.meta.url), "utf8"));
 
@@ -33,13 +33,19 @@ test("reports expose activity times and printable CSV output", () => {
   assert.match(reportSource, /text\/csv/);
 });
 
-test("student reports require an administrator session in Apps Script", () => {
-  assert.match(backendSource, /case "studentReport": result = studentReportAction_\(parameters\)/);
-  const reportAction = backendSource.slice(
-    backendSource.indexOf("function studentReportAction_"),
-    backendSource.indexOf("function studentAttendanceReport_"),
-  );
-  assert.match(reportAction, /requireAdmin_\(parameters\.token\)/);
-  assert.match(backendSource, /adminReports:\s*true/);
-  assert.match(reportSource, /jsonp\("studentReport", \{ token: session\.token, studentNumber \}\)/);
+test("reports use the Supabase administrator session instead of Google Apps Script", () => {
+  assert.match(reportPage, /id="report-email"/);
+  assert.match(reportPage, /@supabase\/supabase-js/);
+  assert.match(reportPage, /data-attendance-backend="supabase"/);
+  assert.match(reportSource, /signInAdmin\(elements\.password\.value, elements\.email\.value\.trim\(\)\)/);
+  assert.match(reportSource, /getOwnProfile/);
+  assert.match(reportSource, /supabaseAction\("students"\)/);
+  assert.match(reportSource, /supabaseAction\("studentReport", \{ studentNumber \}\)/);
+  assert.doesNotMatch(reportSource, /jsonp|Google Sheet|getApiUrl|adminLogin/);
+});
+
+test("Supabase reports combine repeated sessions into first and second attendance pairs", () => {
+  assert.match(attendanceApi, /groupAttendanceSessions\(rows \|\| \[\]\)/);
+  assert.match(attendanceApi, /secondTimeIn:\s*row\.second_time_in/);
+  assert.match(attendanceApi, /secondTimeOut:\s*row\.second_time_out/);
 });
