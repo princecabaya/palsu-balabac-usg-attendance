@@ -18,8 +18,9 @@ Never place a Supabase secret key, legacy service-role key, database password, s
 2. Open **SQL Editor** and create a new query.
 3. Paste the complete contents of `supabase/migrations/001_attendance_portal.sql`.
 4. Run the query once and confirm that it commits successfully.
+5. Run each later numbered migration in order. Existing installations should currently also run `supabase/migrations/002_delete_event.sql` once.
 
-The migration creates the student profiles, events, hashed control codes, scanner sessions, paired Time In/Time Out records, correction audit log, reports, Row-Level Security policies and two private Storage buckets.
+The migrations create the student profiles, events, hashed control codes, scanner sessions, paired Time In/Time Out records, correction audit log, reports, Row-Level Security policies, private Storage buckets and administrator-only event deletion.
 
 ## 2. Create the first USG administrator
 

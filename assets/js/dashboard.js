@@ -1,4 +1,4 @@
-import { supabaseAction } from "./supabase-attendance-api.js?v=20260917.2";
+import { supabaseAction } from "./supabase-attendance-api.js?v=20260918.1";
 import { getOwnProfile, getSession, signInAdmin, signOut, supabaseConfig } from "./supabase-client.js?v=20260917.2";
 import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js?v=20260905.1";
 
@@ -34,6 +34,7 @@ const elements = {
 };
 
 let issuedCode = "";
+let issuedEventNo = "";
 
 elements.email.value = supabaseConfig().adminEmail;
 setEventDefaults();
@@ -106,6 +107,18 @@ elements.eventCards.addEventListener("click", async (event) => {
     if (!confirmed) return;
     await eventAction(button, "endEvent", eventNo);
   }
+  if (button.dataset.action === "delete") {
+    const attendanceCount = Number(button.dataset.attendanceCount || 0);
+    const recordLabel = attendanceCount === 1 ? "attendance record" : "attendance records";
+    const confirmed = await confirmAction(
+      "Permanently delete this event?",
+      `This will permanently remove ${eventName}, its scanner codes, and ${attendanceCount} ${recordLabel}. This cannot be undone.`,
+    );
+    if (!confirmed) return;
+    await eventAction(button, "deleteEvent", eventNo, () => {
+      if (issuedEventNo === eventNo) clearIssuedCode();
+    }, `${eventName} and its attendance records were permanently deleted.`);
+  }
 });
 
 async function restoreAdminSession() {
@@ -163,15 +176,18 @@ function renderEvents(events) {
         <div class="event-stat"><strong>${item.counts.BSA}</strong><small>BSA</small></div>
         <div class="event-stat"><strong>${item.counts.total}</strong><small>Total</small></div>
       </div>
-      ${item.status === "ACTIVE" ? `<div class="event-card__actions">
-        <button class="button button--quiet button--small" type="button" data-action="rotate" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}">New code</button>
-        <button class="button button--danger button--small" type="button" data-action="end" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}">End event</button>
-      </div>` : ""}
+      <div class="event-card__actions">
+        ${item.status === "ACTIVE" ? `
+          <button class="button button--quiet button--small" type="button" data-action="rotate" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}">New code</button>
+          <button class="button button--quiet button--small" type="button" data-action="end" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}">End event</button>
+        ` : ""}
+        <button class="button button--danger button--small" type="button" data-action="delete" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}" data-attendance-count="${item.counts.total}">Delete</button>
+      </div>
     </article>
   `).join("");
 }
 
-async function eventAction(button, action, eventNo, onSuccess) {
+async function eventAction(button, action, eventNo, onSuccess, successMessage = "") {
   const oldText = button.textContent;
   button.disabled = true;
   button.textContent = "Working…";
@@ -180,6 +196,7 @@ async function eventAction(button, action, eventNo, onSuccess) {
     const response = await supabaseAction(action, { eventNo });
     onSuccess?.(response);
     await loadEvents();
+    if (successMessage) setStatus(elements.eventsStatus, successMessage, "success");
   } catch (error) {
     handleSessionError(error, elements.eventsStatus);
   } finally {
@@ -190,11 +207,19 @@ async function eventAction(button, action, eventNo, onSuccess) {
 
 function showIssuedCode(event, code, expiresAt) {
   issuedCode = code;
+  issuedEventNo = event.eventNo || event.id || "";
   elements.codeEmpty.hidden = true;
   elements.codeResult.hidden = false;
   elements.codeEventName.textContent = event.name;
   elements.codeOutput.textContent = formatCode(code);
   elements.codeExpiry.textContent = `Expires ${formatDateTime(expiresAt)}`;
+}
+
+function clearIssuedCode() {
+  issuedCode = "";
+  issuedEventNo = "";
+  elements.codeResult.hidden = true;
+  elements.codeEmpty.hidden = false;
 }
 
 function buildScannerLink() {
@@ -224,6 +249,7 @@ function friendlyError(error) {
   const message = String(error?.message || "The Supabase request could not be completed.");
   if (/EXPIRY_MUST_BE_FUTURE/i.test(message)) return "Choose a control-code expiry time in the future.";
   if (/ACTIVE_EVENT_NOT_FOUND/i.test(message)) return "This event is no longer active. Refresh the attendance overview.";
+  if (/EVENT_NOT_FOUND/i.test(message)) return "This event was already deleted. Refresh the attendance overview.";
   if (/ADMIN_REQUIRED/i.test(message)) return "Active USG administrator access is required.";
   if (/JWT|refresh token|session/i.test(message)) return "Your administrator session expired. Sign in again.";
   return message;
