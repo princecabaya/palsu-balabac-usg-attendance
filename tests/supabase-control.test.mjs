@@ -6,7 +6,6 @@ const dashboardPage = fs.readFileSync(new URL("../dashboard.html", import.meta.u
 const dashboard = fs.readFileSync(new URL("../assets/js/dashboard.js", import.meta.url), "utf8");
 const attendanceApi = fs.readFileSync(new URL("../assets/js/supabase-attendance-api.js", import.meta.url), "utf8");
 const scannerPage = fs.readFileSync(new URL("../scanner.html", import.meta.url), "utf8");
-const mainScannerPage = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const deleteEventMigration = fs.readFileSync(new URL("../supabase/migrations/002_delete_event.sql", import.meta.url), "utf8");
 const archiveEventMigration = fs.readFileSync(new URL("../supabase/migrations/003_archive_event.sql", import.meta.url), "utf8");
 
@@ -44,7 +43,6 @@ test("event deletion is administrator-only, audited, and cascades through the ev
 
 test("scanner pages use Supabase control codes issued by the control page", () => {
   assert.match(scannerPage, /data-attendance-backend="supabase"/);
-  assert.match(mainScannerPage, /data-attendance-backend="supabase"/);
   assert.match(scannerPage, /@supabase\/supabase-js/);
   assert.match(attendanceApi, /pageBackend === "supabase"/);
   assert.match(dashboard, /url\.searchParams\.set\("backend", "supabase"\)/);

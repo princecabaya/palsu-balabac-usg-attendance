@@ -5,7 +5,7 @@ import fs from "node:fs";
 const reportPage = fs.readFileSync(new URL("../reports.html", import.meta.url), "utf8");
 const reportSource = fs.readFileSync(new URL("../assets/js/reports.js", import.meta.url), "utf8");
 const attendanceApi = fs.readFileSync(new URL("../assets/js/supabase-attendance-api.js", import.meta.url), "utf8");
-const organizerPages = ["../index.html", "../generator.html", "../dashboard.html", "../reports.html"]
+const organizerPages = ["../generator.html", "../dashboard.html", "../reports.html", "../students.html"]
   .map((path) => fs.readFileSync(new URL(path, import.meta.url), "utf8"));
 
 test("organizer navigation includes the administrator Reports tab", () => {
@@ -15,6 +15,13 @@ test("organizer navigation includes the administrator Reports tab", () => {
 
 test("organizer navigation keeps the Students tab on every organizer page", () => {
   for (const page of organizerPages) assert.match(page, /href="students\.html">Students<\/a>/);
+});
+
+test("organizer navigation links back to the public USG site and website content administration", () => {
+  for (const page of organizerPages) {
+    assert.match(page, /href="index\.html">Public Site<\/a>/);
+    assert.match(page, /href="site-admin\.html">Site Content<\/a>/);
+  }
 });
 
 test("reports search accepts a student name or student ID", () => {

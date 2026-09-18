@@ -1,6 +1,8 @@
-# PSU Balabac USG QR Attendance
+# PalSU Balabac USG Site
 
-A mobile-first QR attendance checker for Palawan State University – Balabac Campus and the University Student Government. The public site runs on GitHub Pages. A staged migration is underway from Google Apps Script/Sheets to Supabase authentication, PostgreSQL and private file storage.
+The official public website and secure student-services platform of the Palawan State University – Balabac Campus University Student Government. It brings together public announcements, activities, officers, projects and transparency documents with the existing student portal and QR attendance system.
+
+The public site runs on GitHub Pages while Supabase provides authentication, PostgreSQL storage and protected student records. The dedicated checker-only attendance page remains available at `scanner.html`.
 
 ## Supabase migration status
 
@@ -18,6 +20,8 @@ Bulk enrollment accepts `.xlsx`, `.csv`, `.tsv`, `.md` and `.txt` rosters with S
 
 ## Included
 
+- Public USG homepage, announcements, activity calendar, officer directory, projects and transparency pages
+- Administrator-only website content management backed by Supabase Row-Level Security
 - Faster QR-only rear-camera scanner plus saved-image and manual student-number fallbacks
 - Navigation-free `scanner.html` for authorized student representatives
 - Organizer-issued eight-character control codes with expiry, rotation, and event ending

@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 const scannerPage = fs.readFileSync(new URL("../scanner.html", import.meta.url), "utf8");
-const organizerScannerPage = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const apiSource = fs.readFileSync(new URL("../assets/js/api.js", import.meta.url), "utf8");
 const scannerSource = fs.readFileSync(new URL("../assets/js/scanner.js", import.meta.url), "utf8");
 const backendSource = fs.readFileSync(new URL("../google-apps-script/Code.gs", import.meta.url), "utf8");
@@ -25,11 +24,9 @@ test("scanner-only page includes student attendance report controls", () => {
   assert.match(scannerPage, /id="download-report"/);
 });
 
-test("both scanners provide explicit Time In and Time Out buttons", () => {
-  for (const page of [scannerPage, organizerScannerPage]) {
-    assert.match(page, /data-attendance-mode="timeIn"/);
-    assert.match(page, /data-attendance-mode="timeOut"/);
-  }
+test("scanner provides explicit Time In and Time Out buttons", () => {
+  assert.match(scannerPage, /data-attendance-mode="timeIn"/);
+  assert.match(scannerPage, /data-attendance-mode="timeOut"/);
   assert.match(scannerSource, /mode:\s*requestedMode/);
   assert.match(backendSource, /BAD_ATTENDANCE_MODE/);
   assert.match(backendSource, /ALREADY_TIMED_IN/);
@@ -51,9 +48,7 @@ test("camera scanner is QR-only and attendance history loads separately", () => 
 });
 
 test("double-tap starts or refocuses the mobile scanner", () => {
-  for (const page of [scannerPage, organizerScannerPage]) {
-    assert.match(page, /Double-tap the camera/);
-  }
+  assert.match(scannerPage, /Double-tap the camera/);
   assert.match(scannerSource, /addEventListener\("pointerup", handlePreviewTap\)/);
   assert.match(scannerSource, /now - lastPreviewTapAt <= 450/);
   assert.match(scannerSource, /triggerScannerBoost/);
