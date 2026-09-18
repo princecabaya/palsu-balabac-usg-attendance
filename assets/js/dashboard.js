@@ -1,4 +1,4 @@
-import { supabaseAction } from "./supabase-attendance-api.js?v=20260918.1";
+import { supabaseAction } from "./supabase-attendance-api.js?v=20260918.2";
 import { getOwnProfile, getSession, signInAdmin, signOut, supabaseConfig } from "./supabase-client.js?v=20260917.2";
 import { clearStatus, escapeHtml, formatDateTime, setStatus } from "./common.js?v=20260905.1";
 
@@ -119,6 +119,16 @@ elements.eventCards.addEventListener("click", async (event) => {
       if (issuedEventNo === eventNo) clearIssuedCode();
     }, `${eventName} and its attendance records were permanently deleted.`);
   }
+  if (button.dataset.action === "archive") {
+    const confirmed = await confirmAction(
+      "Archive this event?",
+      `${eventName} will be hidden from student attendance histories, reports, and this event list. Its records will remain safely stored in Supabase.`,
+    );
+    if (!confirmed) return;
+    await eventAction(button, "archiveEvent", eventNo, () => {
+      if (issuedEventNo === eventNo) clearIssuedCode();
+    }, `${eventName} was archived and removed from student records.`);
+  }
 });
 
 async function restoreAdminSession() {
@@ -181,6 +191,7 @@ function renderEvents(events) {
           <button class="button button--quiet button--small" type="button" data-action="rotate" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}">New code</button>
           <button class="button button--quiet button--small" type="button" data-action="end" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}">End event</button>
         ` : ""}
+        <button class="button button--quiet button--small" type="button" data-action="archive" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}">Archive</button>
         <button class="button button--danger button--small" type="button" data-action="delete" data-event-no="${item.eventNo}" data-event-name="${escapeHtml(item.name)}" data-attendance-count="${item.counts.total}">Delete</button>
       </div>
     </article>
@@ -250,6 +261,7 @@ function friendlyError(error) {
   if (/EXPIRY_MUST_BE_FUTURE/i.test(message)) return "Choose a control-code expiry time in the future.";
   if (/ACTIVE_EVENT_NOT_FOUND/i.test(message)) return "This event is no longer active. Refresh the attendance overview.";
   if (/EVENT_NOT_FOUND/i.test(message)) return "This event was already deleted. Refresh the attendance overview.";
+  if (/EVENT_ALREADY_ARCHIVED/i.test(message)) return "This event is already archived and hidden from reports.";
   if (/ADMIN_REQUIRED/i.test(message)) return "Active USG administrator access is required.";
   if (/JWT|refresh token|session/i.test(message)) return "Your administrator session expired. Sign in again.";
   return message;

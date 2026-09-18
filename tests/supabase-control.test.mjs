@@ -8,6 +8,7 @@ const attendanceApi = fs.readFileSync(new URL("../assets/js/supabase-attendance-
 const scannerPage = fs.readFileSync(new URL("../scanner.html", import.meta.url), "utf8");
 const mainScannerPage = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const deleteEventMigration = fs.readFileSync(new URL("../supabase/migrations/002_delete_event.sql", import.meta.url), "utf8");
+const archiveEventMigration = fs.readFileSync(new URL("../supabase/migrations/003_archive_event.sql", import.meta.url), "utf8");
 
 test("control page uses Supabase administrator authentication without Apps Script setup", () => {
   assert.match(dashboardPage, /id="admin-email"/);
@@ -21,6 +22,16 @@ test("control page uses Supabase administrator authentication without Apps Scrip
   assert.match(dashboard, /data-action="delete"/);
   assert.match(dashboard, /"deleteEvent"/);
   assert.match(attendanceApi, /rpc\("delete_event"/);
+  assert.match(dashboard, /data-action="archive"/);
+  assert.match(attendanceApi, /rpc\("archive_event"/);
+});
+
+test("archived test events remain stored but disappear from event lists and attendance reports", () => {
+  assert.match(archiveEventMigration, /add column if not exists is_archived boolean not null default false/);
+  assert.match(archiveEventMigration, /function public\.archive_event\(p_event_id uuid\)/);
+  assert.match(archiveEventMigration, /'event\.archived'/);
+  assert.match(archiveEventMigration, /where not e\.is_archived/);
+  assert.match(archiveEventMigration, /grant execute on function public\.archive_event\(uuid\) to authenticated/);
 });
 
 test("event deletion is administrator-only, audited, and cascades through the event foreign keys", () => {

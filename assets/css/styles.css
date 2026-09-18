@@ -487,8 +487,8 @@ textarea:focus-visible { outline: 3px solid rgba(24, 126, 183, 0.3); outline-off
 .event-stat { padding: 0.55rem 0.3rem; background: #f5f8f9; border-radius: 9px; text-align: center; }
 .event-stat strong { display: block; font-size: 1.15rem; }
 .event-stat small { color: var(--muted); font-size: 0.65rem; }
-.event-card__actions { align-items: center; }
-.event-card__actions .button { flex: 1; }
+.event-card__actions { align-items: center; flex-wrap: wrap; }
+.event-card__actions .button { flex: 1 1 90px; }
 
 .dialog { width: min(440px, calc(100% - 2rem)); padding: 0; border: 0; border-radius: 18px; box-shadow: 0 26px 70px rgba(8,22,32,0.3); }
 .dialog::backdrop { background: rgba(10, 26, 36, 0.6); backdrop-filter: blur(3px); }

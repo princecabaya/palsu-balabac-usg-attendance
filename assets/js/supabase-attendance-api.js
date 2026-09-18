@@ -75,6 +75,12 @@ export async function supabaseAction(action, params = {}) {
     return ensureOk(data);
   }
 
+  if (action === "archiveEvent") {
+    const { data, error } = await supabase.rpc("archive_event", { p_event_id: params.eventNo });
+    if (error) throw apiError(error.message, error.code);
+    return ensureOk(data);
+  }
+
   if (action === "scan") {
     const { data, error } = await supabase.rpc("record_attendance", {
       p_scanner_token: params.token,
