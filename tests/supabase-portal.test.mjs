@@ -94,6 +94,19 @@ test("students download the front and back ID as separate PNG files without ZIP"
   assert.doesNotMatch(portalSource, /JSZip|\.zip\b/);
 });
 
+test("mobile ID preview shows one side at a time with swipe, buttons and keyboard navigation", () => {
+  assert.match(portal, /id="show-id-front"/);
+  assert.match(portal, /id="show-id-back"/);
+  assert.match(portal, /Swipe left or right on the ID/);
+  assert.match(portalSource, /setupIdPreviewNavigation/);
+  assert.match(portalSource, /scrollToIdSide/);
+  assert.match(portalSource, /ArrowLeft/);
+  assert.match(portalSource, /ArrowRight/);
+  assert.match(styles, /\.portal-id-preview\s*\{[^}]*scroll-snap-type:\s*x mandatory;/s);
+  assert.match(styles, /\.portal-id-slide\s*\{[^}]*scroll-snap-align:\s*start;/s);
+  assert.match(styles, /\.portal-id-slide \.student-id\s*\{[^}]*--id-preview-scale/s);
+});
+
 test("students can download a real Excel attendance report", () => {
   assert.match(portal, /exceljs\/4\.4\.0\/exceljs\.min\.js/);
   assert.match(portal, /id="download-own-report"/);

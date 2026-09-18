@@ -23,15 +23,19 @@ const elements = {
   account: document.querySelector("#student-account"), logout: document.querySelector("#portal-logout"), name: document.querySelector("#account-student-name"), meta: document.querySelector("#account-student-meta"), accountStatus: document.querySelector("#account-status"),
   previewBanner: document.querySelector("#portal-preview-banner"),
   profileForm: document.querySelector("#student-profile-form"), birthDate: document.querySelector("#profile-birth-date"), address: document.querySelector("#profile-address"), addressMode: document.querySelector("#profile-address-mode"), guidedAddress: document.querySelector("#profile-balabac-address"), barangay: document.querySelector("#profile-address-barangay"), addressDetail: document.querySelector("#profile-address-detail"), manualAddressField: document.querySelector("#profile-manual-address-field"), manualAddress: document.querySelector("#profile-address-manual"), addressPreview: document.querySelector("#profile-address-preview strong"), phone: document.querySelector("#profile-phone"), emergencyName: document.querySelector("#profile-emergency-name"), emergencyPhone: document.querySelector("#profile-emergency-phone"), photo: document.querySelector("#profile-photo"), privacy: document.querySelector("#profile-privacy"), profileStatus: document.querySelector("#profile-status"),
-  idPreview: document.querySelector("#portal-id-preview"), saveId: document.querySelector("#save-id-copy"), downloadFront: document.querySelector("#download-id-front"), downloadBack: document.querySelector("#download-id-back"), pdfId: document.querySelector("#download-id-pdf"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
+  idPreview: document.querySelector("#portal-id-preview"), idFrontTab: document.querySelector("#show-id-front"), idBackTab: document.querySelector("#show-id-back"), idPosition: document.querySelector("#portal-id-position"), saveId: document.querySelector("#save-id-copy"), downloadFront: document.querySelector("#download-id-front"), downloadBack: document.querySelector("#download-id-back"), pdfId: document.querySelector("#download-id-pdf"), printId: document.querySelector("#print-id-pair"), idStatus: document.querySelector("#id-status"),
   reportBody: document.querySelector("#own-report-body"), reportEmpty: document.querySelector("#own-report-empty"), eventCount: document.querySelector("#own-event-count"), totalTime: document.querySelector("#own-total-time"), downloadReport: document.querySelector("#download-own-report"), reportStatus: document.querySelector("#own-report-status"),
 };
 
 let profile;
 let photoUrl = "";
 let idCards;
+let idSlides = [];
+let activeIdSide = "front";
+let idPreviewLayoutKey = "";
 let attendance = [];
 const previewMode = new URLSearchParams(window.location.search).get("preview") === "interface";
+const mobileIdPreview = window.matchMedia("(max-width: 680px)");
 
 BALABAC_BARANGAYS.forEach((barangay) => elements.barangay.add(new Option(barangay, barangay)));
 elements.addressMode.addEventListener("change", syncAddressEditor);
@@ -49,6 +53,13 @@ elements.downloadBack.addEventListener("click", () => downloadIdSide("back"));
 elements.pdfId.addEventListener("click", downloadIdPdf);
 elements.printId.addEventListener("click", printIdPair);
 elements.downloadReport.addEventListener("click", downloadExcelReport);
+elements.idFrontTab.addEventListener("click", () => showIdSide("front"));
+elements.idBackTab.addEventListener("click", () => showIdSide("back"));
+elements.idPreview.addEventListener("scroll", syncIdSideFromScroll, { passive: true });
+elements.idPreview.addEventListener("keydown", handleIdPreviewKeydown);
+mobileIdPreview.addEventListener?.("change", layoutIdPreview);
+if ("ResizeObserver" in window) new ResizeObserver(layoutIdPreview).observe(elements.idPreview);
+else window.addEventListener("resize", layoutIdPreview);
 
 if (previewMode) openInterfacePreview();
 else restoreAccount();
@@ -155,6 +166,7 @@ async function renderAccount() {
   elements.privacy.checked = Boolean(profile.privacy_notice_accepted_at);
   photoUrl = !previewMode && profile.photo_path ? await privateAssetUrl("student-photos", profile.photo_path) : "";
   idCards = renderStudentIdPair(elements.idPreview, profile, photoUrl);
+  setupIdPreviewNavigation();
   if (previewMode) {
     attendance = [{
       event_name: "Sample USG Activity",
@@ -169,6 +181,86 @@ async function renderAccount() {
   } else {
     await loadAttendance();
   }
+}
+
+function setupIdPreviewNavigation() {
+  idSlides = [
+    createIdSlide("front", idCards.front),
+    createIdSlide("back", idCards.back),
+  ];
+  elements.idPreview.replaceChildren(...idSlides);
+  idPreviewLayoutKey = "";
+  layoutIdPreview();
+  requestAnimationFrame(() => showIdSide(activeIdSide, false));
+}
+
+function createIdSlide(side, card) {
+  const slide = document.createElement("div");
+  slide.className = "portal-id-slide";
+  slide.id = `portal-id-slide-${side}`;
+  slide.dataset.idSide = side;
+  slide.setAttribute("role", "tabpanel");
+  slide.setAttribute("aria-labelledby", side === "front" ? "show-id-front" : "show-id-back");
+  slide.append(card);
+  return slide;
+}
+
+function layoutIdPreview() {
+  if (!idCards || !idSlides.length) return;
+  const isMobile = mobileIdPreview.matches;
+  const availableWidth = Math.max(0, elements.idPreview.clientWidth - 16);
+  const layoutKey = `${isMobile}:${availableWidth}`;
+  if (layoutKey === idPreviewLayoutKey) return;
+  idPreviewLayoutKey = layoutKey;
+  idSlides.forEach((slide) => {
+    const card = slide.querySelector(".student-id");
+    card.style.removeProperty("--id-preview-scale");
+    slide.style.removeProperty("height");
+    slide.setAttribute("aria-hidden", String(isMobile && slide.dataset.idSide !== activeIdSide));
+    if (!isMobile || !availableWidth) return;
+    const scale = Math.min(1, availableWidth / card.offsetWidth);
+    card.style.setProperty("--id-preview-scale", String(scale));
+    slide.style.height = `${Math.ceil(card.offsetHeight * scale) + 16}px`;
+  });
+  if (isMobile) requestAnimationFrame(() => scrollToIdSide(activeIdSide, false));
+  else elements.idPreview.scrollLeft = 0;
+}
+
+function showIdSide(side, smooth = true) {
+  updateIdSideState(side);
+  scrollToIdSide(activeIdSide, smooth);
+}
+
+function updateIdSideState(side) {
+  activeIdSide = side === "back" ? "back" : "front";
+  elements.idFrontTab.classList.toggle("is-active", activeIdSide === "front");
+  elements.idBackTab.classList.toggle("is-active", activeIdSide === "back");
+  elements.idFrontTab.setAttribute("aria-selected", String(activeIdSide === "front"));
+  elements.idBackTab.setAttribute("aria-selected", String(activeIdSide === "back"));
+  elements.idPosition.textContent = activeIdSide === "front" ? "Front · 1 of 2" : "Back · 2 of 2";
+  idSlides.forEach((slide) => slide.setAttribute("aria-hidden", String(mobileIdPreview.matches && slide.dataset.idSide !== activeIdSide)));
+}
+
+function scrollToIdSide(side, smooth = true) {
+  if (!mobileIdPreview.matches || !idSlides.length) return;
+  const slide = idSlides[side === "back" ? 1 : 0];
+  elements.idPreview.scrollTo({ left: slide.offsetLeft, behavior: smooth ? "smooth" : "auto" });
+}
+
+let idScrollFrame = 0;
+function syncIdSideFromScroll() {
+  if (!mobileIdPreview.matches || idScrollFrame || !idSlides.length) return;
+  idScrollFrame = requestAnimationFrame(() => {
+    idScrollFrame = 0;
+    const distances = idSlides.map((slide) => Math.abs(slide.offsetLeft - elements.idPreview.scrollLeft));
+    updateIdSideState(distances[1] < distances[0] ? "back" : "front");
+  });
+}
+
+function handleIdPreviewKeydown(event) {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+  event.preventDefault();
+  showIdSide(event.key === "ArrowRight" ? "back" : "front");
 }
 
 async function handleProfileSave(event) {

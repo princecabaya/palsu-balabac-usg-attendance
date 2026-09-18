@@ -8,14 +8,14 @@
   <meta name="description" content="Private PSU Balabac USG student attendance portal.">
   <title>Student Portal | PSU Balabac USG Attendance</title>
   <link rel="icon" href="assets/img/usg-logo.png">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.6">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260917.7">
   <script src="assets/js/config.js?v=20260915.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" defer></script>
-  <script type="module" src="assets/js/portal.js?v=20260917.6"></script>
+  <script type="module" src="assets/js/portal.js?v=20260917.7"></script>
 </head>
 <body class="portal-body">
   <header class="site-header no-print">
@@ -116,7 +116,15 @@
         </section>
       </div>
 
-      <section class="portal-id-preview" id="portal-id-preview" aria-label="Front and back student attendance ID"></section>
+      <div class="portal-id-navigation no-print" aria-label="Choose which side of the ID to view">
+        <div class="portal-id-tabs" role="tablist" aria-label="ID side">
+          <button class="portal-id-tab is-active" id="show-id-front" type="button" role="tab" aria-selected="true" aria-controls="portal-id-slide-front">Front</button>
+          <button class="portal-id-tab" id="show-id-back" type="button" role="tab" aria-selected="false" aria-controls="portal-id-slide-back">Back</button>
+        </div>
+        <strong id="portal-id-position" aria-live="polite">Front · 1 of 2</strong>
+        <small id="portal-id-swipe-hint">Swipe left or right on the ID to view both sides.</small>
+      </div>
+      <section class="portal-id-preview" id="portal-id-preview" tabindex="0" aria-label="Front and back student attendance ID" aria-describedby="portal-id-swipe-hint"></section>
 
       <section class="panel student-own-report no-print">
         <div class="report-heading">
