@@ -11,7 +11,7 @@ window.BURUNGITAW_CONFIG = Object.freeze({
 
   // Set this to the deployed Worker origin, for example:
   // "https://burungitaw-live.<your-subdomain>.workers.dev"
-  cloudflareWorkerBase: "",
+  cloudflareWorkerBase: "https://burungitaw-live.princejobetrohcabayacruz.workers.dev",
 
   // Used only by the direct fallback transport.
   rtcIceServers: [
