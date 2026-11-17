@@ -8,6 +8,7 @@ export function supabaseConfig() {
     key: String(config.supabasePublishableKey || "").trim(),
     adminEmail: String(config.adminEmail || "").trim(),
     studentEmailDomain: String(config.studentEmailDomain || "students.psubalabac.invalid").trim(),
+    fileApiUrl: String(config.fileApiUrl || "").trim().replace(/\/$/, ""),
   };
 }
 
@@ -107,16 +108,30 @@ export async function uploadStudentPhoto(file) {
   if (file.size > 5 * 1024 * 1024) throw new Error("The photo must be 5 MB or smaller.");
   const profile = await getOwnProfile();
   const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const path = `${profile.id}/profile.${extension}`;
-  const { error } = await getSupabase().storage.from("student-photos").upload(path, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
-  if (error) throw databaseError(error);
-  const { data, error: updateError } = await getSupabase().from("profiles").update({ photo_path: path, last_profile_update_at: new Date().toISOString() }).eq("id", profile.id).select("*").single();
+  const preferredName = `profile.${extension}`;
+  const r2Key = await uploadPrivateFile("student-photos", file, preferredName);
+  const { data, error: updateError } = await getSupabase().from("profiles").update({ photo_path: r2Key, last_profile_update_at: new Date().toISOString() }).eq("id", profile.id).select("*").single();
   if (updateError) throw databaseError(updateError);
   return data;
 }
 
 export async function privateAssetUrl(bucket, path, expiresIn = 900) {
   if (!path) return "";
+  const { fileApiUrl } = supabaseConfig();
+  if (fileApiUrl) {
+    const session = await getSession();
+    if (!session) throw new Error("Your session expired. Sign in again.");
+    const fullKey = path.startsWith(bucket + "/") ? path : `${bucket}/${path}`;
+    const response = await fetch(`${fileApiUrl}/api/files/${encodeURIComponent(fullKey)}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || "The private file could not be loaded.");
+    }
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  }
   const { data, error } = await getSupabase().storage.from(bucket).createSignedUrl(path, expiresIn);
   if (error) throw databaseError(error);
   return data.signedUrl;
@@ -125,11 +140,8 @@ export async function privateAssetUrl(bucket, path, expiresIn = 900) {
 export async function privateAssetUrls(bucket, paths, expiresIn = 900) {
   const uniquePaths = [...new Set((paths || []).filter(Boolean))];
   const urls = new Map();
-  for (let offset = 0; offset < uniquePaths.length; offset += 100) {
-    const batch = uniquePaths.slice(offset, offset + 100);
-    const { data, error } = await getSupabase().storage.from(bucket).createSignedUrls(batch, expiresIn);
-    if (error) throw databaseError(error);
-    (data || []).forEach((item, index) => urls.set(item.path || batch[index], item.signedUrl || ""));
+  for (const path of uniquePaths) {
+    urls.set(path, await privateAssetUrl(bucket, path, expiresIn));
   }
   return urls;
 }
@@ -137,13 +149,44 @@ export async function privateAssetUrls(bucket, paths, expiresIn = 900) {
 export async function saveStudentIdCopy(side, blob) {
   if (!blob || !["front", "back"].includes(side)) throw new Error("The ID copy is invalid.");
   const profile = await getOwnProfile();
-  const path = `${profile.id}/attendance-id-${side}.png`;
-  const { error } = await getSupabase().storage.from("student-id-copies").upload(path, blob, { upsert: true, contentType: "image/png", cacheControl: "3600" });
-  if (error) throw databaseError(error);
+  const r2Key = await uploadPrivateFile("student-id-copies", blob, `attendance-id-${side}.png`);
   const field = side === "front" ? "id_front_path" : "id_back_path";
-  const { error: updateError } = await getSupabase().from("profiles").update({ [field]: path }).eq("id", profile.id);
+  const { error: updateError } = await getSupabase().from("profiles").update({ [field]: r2Key }).eq("id", profile.id);
   if (updateError) throw databaseError(updateError);
-  return path;
+  return r2Key;
+}
+
+async function uploadPrivateFile(category, fileOrBlob, fileName) {
+  const { fileApiUrl } = supabaseConfig();
+  if (!fileApiUrl) {
+    const profile = await getOwnProfile();
+    const fallbackPath = `${profile.id}/${fileName}`;
+    const { error } = await getSupabase().storage.from(category).upload(fallbackPath, fileOrBlob, {
+      upsert: true,
+      contentType: fileOrBlob.type || "application/octet-stream",
+      cacheControl: "3600",
+    });
+    if (error) throw databaseError(error);
+    return fallbackPath;
+  }
+
+  const session = await getSession();
+  if (!session) throw new Error("Your session expired. Sign in again.");
+  const response = await fetch(
+    `${fileApiUrl}/api/files/upload?category=${encodeURIComponent(category)}&filename=${encodeURIComponent(fileName)}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": fileOrBlob.type || "application/octet-stream",
+        "X-File-Name": fileName,
+      },
+      body: fileOrBlob,
+    },
+  );
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body?.key) throw new Error(body?.error || "The file could not be uploaded.");
+  return body.key;
 }
 
 export async function ownAttendanceReport() {
