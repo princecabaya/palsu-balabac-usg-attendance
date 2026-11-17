@@ -11,6 +11,10 @@ window.USG_ATTENDANCE_CONFIG = Object.freeze({
   adminEmail: "",
   studentEmailDomain: "students.psubalabac.invalid",
 
+  // Cloudflare R2 file API. Fill this with the deployed USG Worker URL.
+  // Example: "https://palsu-balabac-usg-api.<subdomain>.workers.dev"
+  fileApiUrl: "",
+
   // Permanent Google Apps Script web app deployment URL.
   // Kept temporarily so the live scanner continues to work during migration.
   apiUrl: "https://script.google.com/macros/s/AKfycbzUWHW8RVzW58gQQIWSn6krWFczh8zeqndmDpYc_6nQsKFUmbz1UQf874tWNNw9Uz4V/exec",
