@@ -1,0 +1,6 @@
+name = "burungitaw-live"
+main = "src/index.js"
+compatibility_date = "2026-11-17"
+
+[vars]
+ALLOWED_ORIGIN = "https://YOUR-PAGES-PROJECT.pages.dev"
